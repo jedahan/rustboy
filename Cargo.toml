@@ -1,0 +1,6 @@
+[package]
+name = "rustboy"
+version = "0.1.0"
+authors = ["Jonathan Dahan <jonathan@jonathan.is>"]
+
+[dependencies]
