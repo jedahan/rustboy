@@ -23,8 +23,8 @@ fn main() {
     let name_header = Header {
         name: "title",
         range: Range {
-            offset: 308,
-            length: 16
+            offset: 0x134,
+            length: 0x10
         }
     };
 
@@ -32,7 +32,7 @@ fn main() {
 
     for header in headers {
         let start = header.range.offset;
-        let end = header.range.offset + header.range.length - 1;
+        let end = header.range.offset + header.range.length;
         let mut header_slice = &buffer[start..end];
         println!("{}: {}", header.name, String::from_utf8_lossy(&mut header_slice));
     }
