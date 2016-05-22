@@ -2,6 +2,10 @@ use std::env;
 use std::fs;
 use std::io::Read;
 
+fn checksum(data: &[u8], check: u8) -> bool {
+      check == data.iter().fold(0, |acc: u8, &x| acc.wrapping_sub(x+1))
+}
+
 fn main() {
     let filename = env::args().nth(1).unwrap();
     let mut file = fs::File::open(&filename).unwrap();
@@ -86,7 +90,43 @@ fn main() {
         ..Default::default()
     };
 
-    let headers = vec![name, sgb, cart_type, rom_size, non_japanese];
+    let header_checksum = Header {
+        name: "header checksum",
+        range: Range {
+            start: 0x014D,
+            end: 0x014E,
+        },
+        ..Default::default()
+    };
+
+    let header_checksum_payload = Header {
+        name: "checksummed header",
+        range: Range {
+            start: 0x134,
+            end: 0x14D
+        },
+        ..Default::default()
+    };
+
+    let header = Header {
+        name: "header",
+        range: Range {
+            start: 0x100,
+            end: 0x14F
+        },
+        ..Default::default()
+    };
+
+    let header_slice = &buffer[header_checksum_payload.range.start..header_checksum_payload.range.end];
+    let header_checksum_value = &buffer[header_checksum.range.start..header_checksum.range.end];
+
+    if checksum(header_slice, header_checksum_value[0]) {
+        println!("checksum success!");
+    } else {
+        println!("checksum FAIL TT");
+    }
+
+    let headers = vec![header_checksum_payload, header, name, sgb, cart_type, rom_size, non_japanese, header_checksum];
 
     for header in headers {
         let mut header_slice = &buffer[header.range.start..header.range.end];
