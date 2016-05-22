@@ -11,13 +11,16 @@ fn main() {
     println!("Opened {}, which is {} bytes", filename, buffer.len());
 
     struct Range {
-        offset: usize,
-        length: usize
-    };
+      start: usize,
+      end: usize
+    }
 
     impl Default for Range {
         fn default () -> Range {
-            Range { offset: 0, length: 1 }
+            Range {
+                start: 0,
+                end: 1
+            }
         }
     };
 
@@ -41,16 +44,17 @@ fn main() {
         name: "title",
         format: "string",
         range: Range {
-            offset: 0x134,
-            length: 0x10
-        }
+            start: 0x134,
+            end: 0x144
+        },
+        ..Default::default()
     };
 
     let sgb = Header {
         name: "super game boy flag",
         range: Range {
-            offset: 0x146,
-            ..Default::default()
+            start: 0x146,
+            end: 0x147
         },
         ..Default::default()
     };
@@ -58,8 +62,8 @@ fn main() {
     let cart_type = Header {
         name: "cart type (mappers)",
         range: Range {
-            offset: 0x147,
-            ..Default::default()
+            start: 0x147,
+            end: 0x148
         },
         ..Default::default()
     };
@@ -67,8 +71,8 @@ fn main() {
     let rom_size = Header {
         name: "rom size",
         range: Range {
-            offset: 0x148,
-            ..Default::default()
+            start: 0x148,
+            end: 0x149
         },
         ..Default::default()
     };
@@ -76,8 +80,8 @@ fn main() {
     let non_japanese = Header {
         name: "non_japanese",
         range: Range {
-            offset: 0x14A,
-            ..Default::default()
+            start: 0x14A,
+            end: 0x14B
         },
         ..Default::default()
     };
@@ -85,9 +89,7 @@ fn main() {
     let headers = vec![name, sgb, cart_type, rom_size, non_japanese];
 
     for header in headers {
-        let start = header.range.offset;
-        let end = header.range.offset + header.range.length;
-        let mut header_slice = &buffer[start..end];
+        let mut header_slice = &buffer[header.range.start..header.range.end];
         if header.format == "string" {
             println!("{}: {}", header.name, String::from_utf8_lossy(&mut header_slice));
         } else {
