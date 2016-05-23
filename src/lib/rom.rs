@@ -46,7 +46,7 @@ impl Default for Rom {
                 make_header("old licensee", 0x14B, 0x14C),
                 make_header("make rom version", 0x14C, 0x14D),
                 make_header("header checksum", 0x14D, 0x14E),
-                make_header("global checksum", 0x14E, 0x14F),
+                make_header("global checksum", 0x14E, 0x150),
                 make_header("short header", 0x134, 0x14D),
                 make_header("full header", 0x100, 0x14F),
             ]
@@ -57,6 +57,12 @@ impl Default for Rom {
 impl Rom {
     fn checksum(&self) -> u8 {
         self.mem[0x134..0x14D].iter().fold(0, |a: u8, &b| a.wrapping_sub(b+1))
+    }
+
+    fn global_checksum(&self) -> u16 {
+        let mut sum = self.mem.iter().fold(0, |a: u16, &b| a.wrapping_add(b as u16));
+        sum = sum - self.mem[0x14D] as u16 - self.mem[0x14E] as u16;
+        sum
     }
 
     fn is_valid(&self) -> bool {
@@ -76,10 +82,12 @@ impl fmt::Display for Rom {
      }
 
      if self.is_valid() {
-         writeln!(f, "checksum passed!")
+         writeln!(f, "checksum passed!");
      } else {
-         writeln!(f, "checksum failed!")
+         writeln!(f, "checksum failed!");
      }
+
+     writeln!(f, "global checksum {:X}", self.global_checksum())
 
  }
 }
