@@ -77,7 +77,11 @@ impl fmt::Display for Rom {
          if header.format == "string" {
              try!(writeln!(f, "{}: {}", header.name, String::from_utf8_lossy(&self.mem[header.range.start..header.range.end])));
          } else {
-             try!(writeln!(f, "{}: {:?}", header.name, &self.mem[header.range.start..header.range.end]));
+             try!(write!(f, "{}: [", header.name));
+             for byte in &self.mem[header.range.start..header.range.end-1] {
+                 try!(write!(f, "{:0>2X}, ", byte));
+             }
+             try!(writeln!(f, "{:0>2X}]", &self.mem[header.range.end]));
          }
      }
 
