@@ -8,12 +8,25 @@ pub struct Rom {
     pub headers: Vec<header::Header>
 }
 
+fn make_header(_name: &'static str, _start: usize, _end: usize) -> header::Header {
+    header::Header {
+        name: _name,
+        range: range::Range {
+            start: _start,
+            end: _end
+        },
+        ..Default::default()
+    }
+}
+
 impl Default for Rom {
     fn default () -> Rom {
         Rom {
             mem: vec![0],
             headers: vec![
-                 header::Header {
+                make_header("entry point", 0x100, 0x104),
+                make_header("logo", 0x104, 0x134),
+                header::Header {
                     name: "title",
                     format: "string",
                     range: range::Range {
@@ -22,62 +35,20 @@ impl Default for Rom {
                     },
                     ..Default::default()
                 },
-                header::Header {
-                    name: "super game boy flag",
-                    range: range::Range {
-                        start: 0x146,
-                        end: 0x147
-                    },
-                    ..Default::default()
-                },
-                header::Header {
-                    name: "cart type (mappers)",
-                    range: range::Range {
-                        start: 0x147,
-                        end: 0x148
-                    },
-                    ..Default::default()
-                },
-                header::Header {
-                    name: "rom size",
-                    range: range::Range {
-                        start: 0x148,
-                        end: 0x149
-                    },
-                    ..Default::default()
-                },
-                header::Header {
-                    name: "non_japanese",
-                    range: range::Range {
-                        start: 0x14A,
-                        end: 0x14B
-                    },
-                    ..Default::default()
-                },
-                header::Header {
-                    name: "header checksum",
-                    range: range::Range {
-                        start: 0x014D,
-                        end: 0x014E,
-                    },
-                    ..Default::default()
-                },
-                header::Header {
-                    name: "checksummed header",
-                    range: range::Range {
-                        start: 0x134,
-                        end: 0x14D
-                    },
-                    ..Default::default()
-                },
-                header::Header {
-                    name: "header",
-                    range: range::Range {
-                        start: 0x100,
-                        end: 0x14F
-                    },
-                    ..Default::default()
-                }
+                make_header("manufacturer", 0x13F, 0x142), // todo: string
+                make_header("color game boy", 0x143, 0x144),
+                make_header("new licensee", 0x144, 0x146), // todo: string
+                make_header("super game boy", 0x146, 0x147),
+                make_header("cart type", 0x147, 0x148),
+                make_header("rom size", 0x148, 0x149),
+                make_header("ram size", 0x149, 0x14A),
+                make_header("destination", 0x14A, 0x14B),
+                make_header("old licensee", 0x14B, 0x14C),
+                make_header("make rom version", 0x14C, 0x14D),
+                make_header("header checksum", 0x14D, 0x14E),
+                make_header("global checksum", 0x14E, 0x14F),
+                make_header("short header", 0x134, 0x14D),
+                make_header("full header", 0x100, 0x14F),
             ]
         }
     }
