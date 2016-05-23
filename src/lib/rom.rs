@@ -8,12 +8,12 @@ pub struct Rom {
     pub headers: Vec<header::Header>
 }
 
-fn make_header(_name: &'static str, _start: usize, _end: usize) -> header::Header {
+fn make_header(name: &'static str, start: usize, end: usize) -> header::Header {
     header::Header {
-        name: _name,
+        name: name,
         range: range::Range {
-            start: _start,
-            end: _end
+            start: start,
+            end: end
         },
         ..Default::default()
     }
