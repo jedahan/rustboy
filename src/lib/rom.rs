@@ -65,7 +65,7 @@ impl Rom {
         sum
     }
 
-    fn is_valid(&self) -> bool {
+    pub fn is_valid(&self) -> bool {
         self.checksum() == self.mem[0x14D]
     }
 }
@@ -86,9 +86,9 @@ impl fmt::Display for Rom {
      }
 
      if self.is_valid() {
-         writeln!(f, "checksum passed!");
+         let _ = writeln!(f, "checksum passed!");
      } else {
-         writeln!(f, "checksum failed!");
+         let _ = writeln!(f, "checksum failed!");
      }
 
      writeln!(f, "global checksum {:X}", self.global_checksum())
