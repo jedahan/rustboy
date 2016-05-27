@@ -12,6 +12,10 @@ Put some roms in `roms/`, then test their checksums with
 
     cargo test
 
+It should only show 1 passing test - if you want to see that it is testing your roms, try
+
+    cargo test -- --nocapture
+
 To run a game
 
     cargo run -- roms/Super\ Mario\ Land\ \(World\).gb

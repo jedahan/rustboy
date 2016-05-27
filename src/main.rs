@@ -33,6 +33,7 @@ fn checksums() {
             let entry = entry.unwrap();
             if entry.file_type().unwrap().is_file() {
                 let filepath = entry.path().to_str().unwrap().to_string();
+                println!("testing {}", filepath);
                 assert!(load(filepath).is_valid());
             }
         }
