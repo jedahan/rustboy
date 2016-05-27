@@ -44,3 +44,11 @@
   I have added a register array of u8, a program counter initialized to 0x0100, and a stack pointer initialized to 0xFFFE. These might have to be in one-length arrays if I want to do that magic slice/range translation in the future.
 
   From a cursory scan of the opcode table, it looks like instructions in the 8080 space range from 1-3 bytes, and all the Z80 instructions are 2 bytes long (+1 byte for the prefix). So maybe the first thing to do, is in fetch, we will have to look at the opcode, and figure out how many bytes to fetch, before we decide where it goes.
+
+## 3:30
+
+  Opened Tetris in [hecate](), and after googling, looks like 00 C3 50 01 is NOP JMP 0x0150, which makes sense (jump the header). 0x150 is JMP 028b, which then eads to an XOR A. So probably the first instruction I should implement is JMP?
+
+  I am going to get a disassembler to read these codes a bit better (though there is probably a vim plugin?). brew search dasm and z80dasm look promising.
+
+  OK so dasm just didnt work, and z80dasm kinda-worked, but didn't look good for the gameboy. More searching lead to [gb-disasm](https://github.com/mmuszkow/gb-disasm), compiles great on OSX, and the output is great. Starts with a NOP and jump to 0x150 as expected, and 0x150 jumps to 0x28b, which does XOR A. So we know we are reading the opcodes table correctly, hooray.
