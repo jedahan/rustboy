@@ -4,29 +4,54 @@ use std::env;
 use std::fs;
 use std::io::Read;
 use std::path::Path;
+use std::fmt;
 
 use lib::cart;
+
+struct Cpu {
+    pc: u16,
+    sp: u16,
+    registers: [u8; 8],
+    wram: [u8; 1024],
+    vram: [u8; 1024]
+}
+
+impl Cpu {
+    fn new() -> Cpu {
+        Cpu {
+            pc: 0x0100,
+            sp: 0xFFFE,
+            // A, B, D, H, F, C, E, L?
+            registers: [0 as u8; 8],
+            wram: [0; 1024],
+            vram: [0; 1024]
+        }
+    }
+}
+
+impl fmt::Display for Cpu {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "{:?}", self.registers);
+        writeln!(f, "pc: {:0>4X}", self.pc);
+        writeln!(f, "sp: {:0>4X}", self.sp);
+        Ok(())
+    }
+}
 
 fn main() {
     let boot_rom_file_name = env::args().nth(1).unwrap();
     let cart_rom_file_name = env::args().nth(2).unwrap();
     let boot = load_rom(boot_rom_file_name);
     let cart = load_cart(cart_rom_file_name);
-    let registers = [0 as u8; 8]; // A, B, D, H, F, C, E, L?
-    let pc = 0x0100 as u16;
-    let sp = 0xFFFE as u16;
-
-    let wram = [0; 1024];
-    let vram = [0; 1024];
 
     println!("{}", cart);
-    println!("{:?}", registers);
-    println!("pc: {:0>4X}", pc);
-    println!("sp: {:0>4X}", sp);
+
+    let cpu = Cpu::new();
+    println!("{}", cpu);
 }
 
 fn load_rom<P: AsRef<Path>>(path: P) -> Vec<u8> {
-    let mut file = fs::File::open(path.as_ref()).unwrap();
+    let mut file = fs::File::open(path).unwrap();
     let mut buffer = Vec::new();
     file.read_to_end(&mut buffer).unwrap();
     buffer
