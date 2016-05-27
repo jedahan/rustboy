@@ -10,17 +10,25 @@ use lib::rom;
 
 fn main() {
     let filename = env::args().nth(1).unwrap();
-    let game: rom::Rom = load(filename);
+    let boot = load(String::from("DMG_ROM.bin"));
+    let game: rom::Rom = load_rom(filename);
+
+    let wram = [0; 1024];
+    let vram = [0; 1024];
+
     println!("{}", game);
 }
 
-fn load(filepath: String) -> rom::Rom {
+fn load(filepath: String) -> Vec<u8> {
     let mut file = fs::File::open(filepath).unwrap();
-    let mut buffer = Vec::new();
-    let _ = file.read_to_end(&mut buffer).unwrap();
+    let mut buffer = Vec::<u8>::new();
+    file.read_to_end(&mut buffer).unwrap();
+    buffer
+}
 
+fn load_rom(filepath: String) -> rom::Rom {
     rom::Rom {
-        mem: buffer,
+        mem: load(filepath),
         ..Default::default()
     }
 }
@@ -34,7 +42,7 @@ fn checksums() {
             if entry.file_type().unwrap().is_file() {
                 let filepath = entry.path().to_str().unwrap().to_string();
                 println!("testing {}", filepath);
-                assert!(load(filepath).is_valid());
+                assert!(load_rom(filepath).is_valid());
             }
         }
     }

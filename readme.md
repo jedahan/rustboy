@@ -4,6 +4,8 @@ A game boy emulator, written in rust!
 
 Inspired by [Ferris Makes Emulators](https://www.youtube.com/playlist?list=PL-sXmdrqqYYcznDg4xwAJWQgNL2gRray2)
 
+With help from [Dissecting the Game Boy](https://www.youtube.com/watch?v=ecTQVa42sJc)
+
 To install dependencies
 
     cargo install
