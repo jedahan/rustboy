@@ -3,7 +3,7 @@ use std::fmt;
 use lib::header;
 use lib::range;
 
-pub struct Rom {
+pub struct Cart {
     pub mem: Vec<u8>,
     pub headers: Vec<header::Header>
 }
@@ -19,9 +19,9 @@ fn make_header(name: &'static str, start: usize, end: usize) -> header::Header {
     }
 }
 
-impl Default for Rom {
-    fn default () -> Rom {
-        Rom {
+impl Default for Cart {
+    fn default () -> Cart {
+        Cart {
             mem: vec![0],
             headers: vec![
                 make_header("entry point", 0x100, 0x104),
@@ -54,7 +54,7 @@ impl Default for Rom {
     }
 }
 
-impl Rom {
+impl Cart {
     fn checksum(&self) -> u8 {
         self.mem[0x134..0x14D].iter().fold(0, |a: u8, &b| a.wrapping_sub(b+1))
     }
@@ -70,7 +70,7 @@ impl Rom {
     }
 }
 
-impl fmt::Display for Rom {
+impl fmt::Display for Cart {
  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 
      for header in &self.headers {

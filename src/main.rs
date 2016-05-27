@@ -3,35 +3,38 @@ mod lib;
 use std::env;
 use std::fs;
 use std::io::Read;
-#[cfg(test)]
 use std::path::Path;
 
-use lib::rom;
+use lib::cart;
 
 fn main() {
-    let filename = env::args().nth(1).unwrap();
-    let boot = load(String::from("DMG_ROM.bin"));
-    let game: rom::Rom = load_rom(filename);
+    let boot_rom_file_name = env::args().nth(1).unwrap();
+    let cart_rom_file_name = env::args().nth(2).unwrap();
+    let boot = load_rom(boot_rom_file_name);
+    let cart = load_cart(cart_rom_file_name);
     let registers = [0 as u8; 8]; // A, B, D, H, F, C, E, L?
-    let pc = [0x0100 as u16];
-    let sp = [0xFFFE as u16];
+    let pc = 0x0100 as u16;
+    let sp = 0xFFFE as u16;
 
     let wram = [0; 1024];
     let vram = [0; 1024];
 
-    println!("{}", game);
+    println!("{}", cart);
+    println!("{:?}", registers);
+    println!("pc: {:0>4X}", pc);
+    println!("sp: {:0>4X}", sp);
 }
 
-fn load(filepath: String) -> Vec<u8> {
-    let mut file = fs::File::open(filepath).unwrap();
-    let mut buffer = Vec::<u8>::new();
+fn load_rom<P: AsRef<Path>>(path: P) -> Vec<u8> {
+    let mut file = fs::File::open(path.as_ref()).unwrap();
+    let mut buffer = Vec::new();
     file.read_to_end(&mut buffer).unwrap();
     buffer
 }
 
-fn load_rom(filepath: String) -> rom::Rom {
-    rom::Rom {
-        mem: load(filepath),
+fn load_cart<P: AsRef<Path>>(path: P) -> cart::Cart {
+    cart::Cart {
+        mem: load_rom(path),
         ..Default::default()
     }
 }
@@ -54,9 +57,9 @@ fn checksums() {
         for entry in fs::read_dir(dir).unwrap() {
             let entry = entry.unwrap();
             if entry.file_type().unwrap().is_file() {
-                let filepath = entry.path().to_str().unwrap().to_string();
-                println!("testing {}", filepath);
-                assert!(load_rom(filepath).is_valid());
+                let filepath = entry.path();
+                println!("testing {:?}", filepath);
+                assert!(load_cart(filepath).is_valid());
             }
         }
     }
