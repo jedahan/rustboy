@@ -6,6 +6,12 @@ Inspired by [Ferris Makes Emulators](https://www.youtube.com/playlist?list=PL-sX
 
 With help from [Dissecting the Game Boy](https://www.youtube.com/watch?v=ecTQVa42sJc)
 
+# documentation
+
+I am trying to verbosely write about the creation process. Please see the [development log](development_log.md) for a narrative, and [notes](notes.md) for more of a scratchpad.
+
+# using
+
 To install dependencies
 
     cargo install
