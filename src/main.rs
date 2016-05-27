@@ -12,6 +12,9 @@ fn main() {
     let filename = env::args().nth(1).unwrap();
     let boot = load(String::from("DMG_ROM.bin"));
     let game: rom::Rom = load_rom(filename);
+    let registers = [0 as u8; 8]; // A, B, D, H, F, C, E, L?
+    let pc = [0x0100 as u16];
+    let sp = [0xFFFE as u16];
 
     let wram = [0; 1024];
     let vram = [0; 1024];
@@ -32,6 +35,17 @@ fn load_rom(filepath: String) -> rom::Rom {
         ..Default::default()
     }
 }
+
+/*
+*  map to something?
+fn map(address: u8) -> &[u8] {
+  if address < 0x100 {
+    boot.mem[address]
+  } else {
+    game.mem[address-0x100]
+  }
+}
+*/
 
 #[test]
 fn checksums() {

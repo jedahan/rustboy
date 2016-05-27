@@ -32,3 +32,15 @@
   A quick trying of modification in main says no...
 
   OK, so ferris looks at the boot sequence. A quick google lead to http://gbdev.gg8.se/wiki/articles/Gameboy_Bootstrap_ROM#Contents_of_the_ROM, and I downloaded the bin, which is a dumped boot rom. I will load this file, and make the memory mapper to access it.
+
+## 2:30
+
+  In an ideal world, I would love to be able to just work with mem[0x100..0x7FFF] and have it transparently map to mem.game[0x000..0x7EFFF] ... or do cartridges come with the entire boot.rom?
+
+## 3:00
+
+  Looking at [this pdf](http://www.codeslinger.co.uk/pages/projects/gameboy/files/GB.pdf), and referencing [this awesome opcode table](http://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html), it looks like there are 8 bit opcodes, which are kinda normal to intel 8080 processors, and then 16 bit opcodes, which are some modified subset of Z80 instructions, which are 'prefixed' with 0xCB. The way you read the chart is to replace the x in one column/row with the value in the other column/row. This gives us a bit less than 2 * 255 operations we can implement.
+
+  I have added a register array of u8, a program counter initialized to 0x0100, and a stack pointer initialized to 0xFFFE. These might have to be in one-length arrays if I want to do that magic slice/range translation in the future.
+
+  From a cursory scan of the opcode table, it looks like instructions in the 8080 space range from 1-3 bytes, and all the Z80 instructions are 2 bytes long (+1 byte for the prefix). So maybe the first thing to do, is in fetch, we will have to look at the opcode, and figure out how many bytes to fetch, before we decide where it goes.
