@@ -62,12 +62,12 @@ impl Cpu {
 
 impl fmt::Display for Cpu {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "af: {:0>2X}{:0>2X}", self.reg_a, self.reg_f);
-        writeln!(f, "bc: {:0>2X}{:0>2X}", self.reg_b, self.reg_c);
-        writeln!(f, "de: {:0>2X}{:0>2X}", self.reg_d, self.reg_e);
-        writeln!(f, "hl: {:0>2X}{:0>2X}", self.reg_h, self.reg_l);
-        writeln!(f, "pc: {:0>4X}", self.pc);
-        writeln!(f, "sp: {:0>4X}", self.sp);
+        try!(writeln!(f, "af: {:0>2X}{:0>2X}", self.reg_a, self.reg_f));
+        try!(writeln!(f, "bc: {:0>2X}{:0>2X}", self.reg_b, self.reg_c));
+        try!(writeln!(f, "de: {:0>2X}{:0>2X}", self.reg_d, self.reg_e));
+        try!(writeln!(f, "hl: {:0>2X}{:0>2X}", self.reg_h, self.reg_l));
+        try!(writeln!(f, "pc: {:0>4X}", self.pc));
+        try!(writeln!(f, "sp: {:0>4X}", self.sp));
         Ok(())
     }
 }
