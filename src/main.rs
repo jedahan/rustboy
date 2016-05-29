@@ -44,16 +44,44 @@ impl Cpu {
         self.reg_h = 0x01;
         self.reg_l = 0x4D;
     }
+    fn flag_zero(&self) -> bool {
+        &self.reg_f & 0b10000000 > 0
+    }
+    fn flag_subtract(&self) -> bool {
+        &self.reg_f & 0b01000000 > 0
+    }
+    fn flag_half_carry(&self) -> bool {
+        &self.reg_f & 0b00100000 > 0
+    }
+    fn flag_carry(&self) -> bool {
+        &self.reg_f & 0b00010000 > 0
+    }
 }
 
 impl fmt::Display for Cpu {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        try!(writeln!(f, "af: {:0>2X}{:0>2X}", self.reg_a, self.reg_f));
-        try!(writeln!(f, "bc: {:0>2X}{:0>2X}", self.reg_b, self.reg_c));
-        try!(writeln!(f, "de: {:0>2X}{:0>2X}", self.reg_d, self.reg_e));
-        try!(writeln!(f, "hl: {:0>2X}{:0>2X}", self.reg_h, self.reg_l));
-        try!(writeln!(f, "pc: {:0>4X}", self.pc));
-        try!(writeln!(f, "sp: {:0>4X}", self.sp));
+        try!(writeln!(f, "cpu {{"));
+        try!(writeln!(f, "  pc: {:0>4X}", self.pc));
+        try!(writeln!(f, "  sp: {:0>4X}", self.sp));
+        try!(writeln!(f, "  registers {{"));
+        try!(writeln!(f,
+            "    {:>2} {:>2} {:>2} {:>2} {:>2} {:>2} {:>2} {:>2}",
+            "a", "f", "b", "c", "d", "e", "h", "l"
+        ));
+
+        try!(writeln!(f,
+            "    {:0>2X} {:0>2X} {:0>2X} {:0>2X} {:0>2X} {:0>2X} {:0>2X} {:0>2X}",
+            self.reg_a, self.reg_f, self.reg_b, self.reg_c, self.reg_d, self.reg_e, self.reg_h, self.reg_l
+        ));
+        try!(writeln!(f, "  }}"));
+
+        try!(writeln!(f, "  flags {{"));
+        try!(write!(f, "    zero: {}", self.flag_zero()));
+        try!(write!(f, ", sub: {}", self.flag_subtract()));
+        try!(write!(f, ", half: {}", self.flag_half_carry()));
+        try!(writeln!(f, ", carry: {}", self.flag_carry()));
+        try!(writeln!(f, "  }}"));
+        try!(writeln!(f, "}}"));
         Ok(())
     }
 }
