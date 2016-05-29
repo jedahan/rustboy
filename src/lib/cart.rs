@@ -1,17 +1,17 @@
 use std::fmt;
 
-use lib::header;
-use lib::range;
+use header::Header;
+use range::Range;
 
 pub struct Cart {
     pub mem: Vec<u8>,
-    pub headers: Vec<header::Header>
+    pub headers: Vec<Header>
 }
 
-fn make_header(name: &'static str, start: usize, end: usize) -> header::Header {
-    header::Header {
+fn make_header(name: &'static str, start: usize, end: usize) -> Header {
+    Header {
         name: name,
-        range: range::Range {
+        range: Range {
             start: start,
             end: end
         },
@@ -26,10 +26,10 @@ impl Default for Cart {
             headers: vec![
                 make_header("entry point", 0x100, 0x104),
                 make_header("logo", 0x104, 0x134),
-                header::Header {
+                Header {
                     name: "title",
                     format: "string",
-                    range: range::Range {
+                    range: Range {
                         start: 0x134,
                         end: 0x144
                     },

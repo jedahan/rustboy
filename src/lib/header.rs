@@ -1,4 +1,4 @@
-use lib::range;
+use range::Range;
 
 pub struct Header {
     pub name: &'static str,

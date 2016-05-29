@@ -3,4 +3,10 @@ name = "rustboy"
 version = "0.1.0"
 authors = ["Jonathan Dahan <jonathan@jonathan.is>"]
 
-[dependencies]
+[lib]
+name = "rustboylib"
+path = "src/lib/mod.rs"
+
+[[bin]]
+name = "rustboy"
+path = "src/main.rs"
