@@ -74,13 +74,15 @@ impl fmt::Display for Cpu {
 
 fn main() {
     let boot_rom_file_name = env::args().nth(1).unwrap();
-    let cart_rom_file_name = env::args().nth(2).unwrap();
-    let boot = load_rom(boot_rom_file_name);
-    let cart = load_cart(cart_rom_file_name);
+    let boot = load_rom(Path::new(&boot_rom_file_name));
+    println!("boot: {:?}", boot);
 
+    let cart_rom_file_name = env::args().nth(2).unwrap();
+    let cart = load_cart(Path::new(&cart_rom_file_name));
     println!("{}", cart);
 
-    let cpu = Cpu::new();
+    let mut cpu = Cpu::new();
+    cpu.reset();
     println!("{}", cpu);
 }
 
