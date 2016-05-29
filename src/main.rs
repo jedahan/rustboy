@@ -36,17 +36,6 @@ fn load_cart<P: AsRef<Path>>(path: P) -> cart::Cart {
     }
 }
 
-/*
-*  map to something?
-fn map(address: u8) -> &[u8] {
-  if address < 0x100 {
-    boot.mem[address]
-  } else {
-    game.mem[address-0x100]
-  }
-}
-*/
-
 #[test]
 fn checksums() {
     let dir = Path::new("roms");
