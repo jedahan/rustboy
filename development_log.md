@@ -52,3 +52,9 @@
   I am going to get a disassembler to read these codes a bit better (though there is probably a vim plugin?). brew search dasm and z80dasm look promising.
 
   OK so dasm just didnt work, and z80dasm kinda-worked, but didn't look good for the gameboy. More searching lead to [gb-disasm](https://github.com/mmuszkow/gb-disasm), compiles great on OSX, and the output is great. Starts with a NOP and jump to 0x150 as expected, and 0x150 jumps to 0x28b, which does XOR A. So we know we are reading the opcodes table correctly, hooray.
+
+# Sunday
+
+## 11:30-1:30
+
+Spent two hours trying to split out tests to a subdirectory, but ended up fighting crates. Created a branch called split-out-tests that has more details of the failure. #rust-beginners on irc.mozilla.org was very helpful.
