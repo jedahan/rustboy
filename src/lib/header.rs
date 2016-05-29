@@ -1,5 +1,6 @@
 use lib::range;
 
+#[derive(Debug)]
 pub struct Header {
     pub name: &'static str,
     pub format: &'static str,

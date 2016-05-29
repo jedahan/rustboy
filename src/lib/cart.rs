@@ -3,6 +3,7 @@ use std::fmt;
 use lib::header;
 use lib::range;
 
+#[derive(Debug)]
 pub struct Cart {
     pub mem: Vec<u8>,
     pub headers: Vec<header::Header>

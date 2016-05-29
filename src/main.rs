@@ -8,6 +8,7 @@ use std::fmt;
 
 use lib::cart;
 
+#[derive(Default, Debug)]
 struct Cpu {
     pc: u16,
     sp: u16,
@@ -26,23 +27,8 @@ struct Cpu {
 
 impl Cpu {
     fn new() -> Cpu {
-        Cpu {
-            pc: 0,
-            sp: 0,
-            reg_a: 0,
-            reg_f: 0,
-
-            reg_b: 0,
-            reg_c: 0,
-
-            reg_d: 0,
-            reg_e: 0,
-
-            reg_h: 0,
-            reg_l: 0
-        }
+        Default::default()
     }
-
     fn reset(&mut self) {
         self.pc = 0x0100;
         self.sp = 0xFFFE;
