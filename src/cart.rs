@@ -86,9 +86,9 @@ impl fmt::Display for Cart {
      }
 
      if self.is_valid() {
-         let _ = writeln!(f, "checksum passed!");
+         try!(writeln!(f, "checksum passed!"));
      } else {
-         let _ = writeln!(f, "checksum failed!");
+         try!(writeln!(f, "checksum failed!"));
      }
 
      writeln!(f, "global checksum {:X}", self.global_checksum())
