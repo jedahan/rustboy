@@ -20,7 +20,6 @@
           0xFF80..0xFFFE => highram (in cpu, super fast)
           0xFFFF => interrupt enable/disable
 
-
 # initial/reset state
 
 From page 18 of gb.pdf

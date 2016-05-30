@@ -34,9 +34,21 @@ impl Cpu {
             interconnect: interconnect
         }
     }
+
     pub fn run(&mut self) {
         println!("I am running!");
+        while self.pc < 0x250 {
+            let opcode = self.read_word(self.pc);
+            println!("opcode {:0>2X}", opcode);
+            self.pc = self.pc + 1;
+        }
+
     }
+
+    fn read_word(&self, address: u16) -> u8 {
+        self.interconnect[address]
+    }
+
     pub fn reset(&mut self) {
         self.pc = 0x0100;
         self.sp = 0xFFFE;

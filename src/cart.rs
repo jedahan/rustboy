@@ -1,6 +1,7 @@
 use std::fmt;
 use header;
 use range;
+use std::ops::Index;
 
 #[derive(Debug)]
 pub struct Cart {
@@ -11,10 +12,7 @@ pub struct Cart {
 fn make_header(name: &'static str, start: usize, end: usize) -> header::Header {
     header::Header {
         name: name,
-        range: range::Range {
-            start: start,
-            end: end
-        },
+        range: start..end,
         ..Default::default()
     }
 }
@@ -29,10 +27,7 @@ impl Default for Cart {
                 header::Header {
                     name: "title",
                     format: "string",
-                    range: range::Range {
-                        start: 0x134,
-                        end: 0x144
-                    },
+                    range: 0x134..0x144,
                     ..Default::default()
                 },
                 make_header("manufacturer", 0x13F, 0x142), // todo: string
@@ -94,4 +89,12 @@ impl fmt::Display for Cart {
      writeln!(f, "global checksum {:X}", self.global_checksum())
 
  }
+}
+
+impl Index<u16> for Cart {
+    type Output = u8;
+
+    fn index<'a>(&'a self, index: u16) -> &u8 {
+        &self.mem[index as usize]
+    }
 }
