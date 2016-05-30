@@ -1,4 +1,4 @@
-use lib::range;
+use range;
 
 #[derive(Debug)]
 pub struct Header {

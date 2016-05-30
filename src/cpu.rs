@@ -18,6 +18,9 @@ pub struct Cpu {
 }
 
 impl Cpu {
+    pub fn run(&mut self) {
+        println!("I am running!");
+    }
     pub fn reset(&mut self) {
         self.pc = 0x0100;
         self.sp = 0xFFFE;

@@ -1,7 +1,6 @@
 use std::fmt;
-
-use lib::header;
-use lib::range;
+use header;
+use range;
 
 #[derive(Debug)]
 pub struct Cart {

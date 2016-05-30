@@ -1,12 +1,14 @@
-mod lib;
+mod gameboy;
+mod cpu;
+mod interconnect;
+mod cart;
+mod header;
+mod range;
 
 use std::env;
 use std::fs;
 use std::io::Read;
 use std::path::Path;
-
-use lib::cart;
-use lib::cpu;
 
 fn main() {
     let boot_rom_file_name = env::args().nth(1).unwrap();
@@ -17,9 +19,10 @@ fn main() {
     let cart = load_cart(Path::new(&cart_rom_file_name));
     println!("{}", cart);
 
-    let mut cpu = cpu::Cpu::default();
-    cpu.reset();
-    println!("{}", cpu);
+    let mut gb = gameboy::GameBoy::default();
+    gb.reset();
+    println!("{}", gb);
+    gb.run();
 }
 
 fn load_rom<P: AsRef<Path>>(path: P) -> Vec<u8> {
