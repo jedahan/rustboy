@@ -12,17 +12,23 @@ use std::path::Path;
 
 fn main() {
     let boot_rom_file_name = env::args().nth(1).unwrap();
-    let boot = load_rom(Path::new(&boot_rom_file_name));
-    println!("boot: {:?}", boot);
+    let boot = load_bootrom(Path::new(&boot_rom_file_name));
 
     let cart_rom_file_name = env::args().nth(2).unwrap();
     let cart = load_cart(Path::new(&cart_rom_file_name));
     println!("{}", cart);
 
-    let mut gb = gameboy::GameBoy::default();
-    gb.reset();
-    println!("{}", gb);
-    gb.run();
+    let mut gameboy: gameboy::GameBoy = gameboy::GameBoy::new(boot);
+    gameboy.reset();
+    println!("{}", gameboy);
+    gameboy.run();
+}
+
+fn load_bootrom<P: AsRef<Path>>(path: P) -> [u8; gameboy::BOOTROM_SIZE] {
+    let mut file = fs::File::open(path).unwrap();
+    let mut buffer = [0; gameboy::BOOTROM_SIZE];
+    file.read_exact(&mut buffer).unwrap();
+    buffer
 }
 
 fn load_rom<P: AsRef<Path>>(path: P) -> Vec<u8> {

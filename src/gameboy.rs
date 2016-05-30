@@ -3,13 +3,19 @@ use std::fmt;
 use cpu;
 use interconnect;
 
-#[derive(Default)]
+pub const BOOTROM_SIZE: usize = 256;
+
 pub struct GameBoy {
-    cpu: cpu::Cpu,
-    interconnect: interconnect::Interconnect
+    cpu: cpu::Cpu
 }
 
 impl GameBoy {
+    pub fn new(boot: [u8; BOOTROM_SIZE]) -> GameBoy {
+        let interconnect = interconnect::Interconnect::new(boot);
+        GameBoy {
+            cpu: cpu::Cpu::new(interconnect)
+        }
+    }
     pub fn run(&mut self) {
         self.cpu.run();
     }
