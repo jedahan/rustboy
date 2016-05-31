@@ -38,14 +38,14 @@ impl Cpu {
     pub fn run(&mut self) {
         println!("I am running!");
         while self.pc < 0x250 {
-            let opcode = self.read_word(self.pc);
+            let opcode = self.read_word(self.pc as usize);
             println!("opcode {:0>2X}", opcode);
             self.pc = self.pc + 1;
         }
 
     }
 
-    fn read_word(&self, address: u16) -> u8 {
+    fn read_word(&self, address: usize) -> u8 {
         self.interconnect[address]
     }
 

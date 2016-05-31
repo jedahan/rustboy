@@ -5,8 +5,6 @@ const XRAM_SIZE: usize = 0x1FFF;
 const HRAM_SIZE: usize = 0x007E;
 
 use std::ops::Index;
-//use std::ops::Range;
-use std::collections::HashMap;
 
 pub struct Interconnect {
     boot: [u8; gameboy::BOOTROM_SIZE],
@@ -16,7 +14,7 @@ pub struct Interconnect {
     xram: [u8; XRAM_SIZE],
     input: u8,
     hram: [u8; HRAM_SIZE],
-    interrupt: bool
+    interrupt: u8
 }
 
 impl Interconnect {
@@ -29,41 +27,26 @@ impl Interconnect {
             xram: [0; XRAM_SIZE],
             input: 0,
             hram: [0; HRAM_SIZE],
-            interrupt: false
+            interrupt: 0
         }
     }
 }
 
-impl Index<u16> for Interconnect {
+impl Index<usize> for Interconnect {
     type Output = u8;
 
-    fn index<'a>(&'a self, index: u16) -> &Self::Output {
-        if index < 0x0100 {
-            &self.boot[index as usize]
-        } else {
-            &self.cart[index]
+    fn index<'a>(&'a self, index: usize) -> &Self::Output {
+        match index {
+            0x0000...0x00FF => &self.boot[index],
+            0x0100...0x7FFF => &self.cart[(index-0x0100) as u16],
+            0x8000...0x9FFF => &self.vram[index-0x8000],
+            0xA000...0xBFFF => &self.xram[index-0xA000],
+            0xC000...0xDFFF => &self.wram[index-0xC000],
+            0xE000...0xFDFF => &self.wram[index-0xE000],
+            0xFF00 => &self.input,
+            0xFF80...0xFFFE => &self.hram[index-0xFF80],
+            0xFFFF => &self.interrupt,
+            _ => panic!("Address {:0>2X} has no known mapping!")
         }
     }
 }
-
-/*
-    pub fn read(&self, index: u16) -> u8 {
-        if index < 0x0100 {
-            self.boot[index as usize]
-        } else {
-            self.cart[(index - 0x0100) as usize]
-        }
-        /*
-        map.insert(0x0000..0x0100, &self.boot);
-        map.insert(0x0100..0x7FFF, &self.cart);
-        map.insert(0x8000..0x9FFF, &self.vram);
-        map.insert(0xA000..0xBFFF, &self.xram);
-        map.insert(0xC000..0xDFFF, &self.wram );
-        map.insert(0xE000..0xFDFF, &self.wram);
-        map.insert(0xFF00..0xFF00, &self.input);
-        map.insert(0xFF80..0xFFFE, &self.hram);
-        map.insert(0xFFFF..0xFFFF, &self.interrupt);
-        */
-
-    }
-        */

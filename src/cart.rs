@@ -1,6 +1,6 @@
-use std::fmt;
 use header;
-use range;
+
+use std::fmt;
 use std::ops::Index;
 
 #[derive(Debug)]
