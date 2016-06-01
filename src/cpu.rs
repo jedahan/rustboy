@@ -13,6 +13,7 @@ pub struct Cpu {
     reg_e: u8,
     reg_h: u8,
     reg_l: u8,
+    operations: u8,
 
     interconnect: interconnect::Interconnect
 }
@@ -30,6 +31,7 @@ impl Cpu {
             reg_e: 0,
             reg_h: 0,
             reg_l: 0,
+            operations: 0,
 
             interconnect: interconnect
         }
@@ -38,15 +40,40 @@ impl Cpu {
     pub fn run(&mut self) {
         println!("I am running!");
         while self.pc < 0x250 {
-            let opcode = self.read_word(self.pc as usize);
-            println!("opcode {:0>2X}", opcode);
+            let opcode = self.interconnect[self.pc];
+
+            match opcode {
+                0x00 => println!("NOP"),
+                0xC3 => self.jump(self.read_word(self.pc + 1)),
+                0xC9 => self.ret(),
+                _ => panic!("unrecognized opcode {:0>2X}", opcode)
+            }
+
+            self.operations = self.operations + 1;
             self.pc = self.pc + 1;
+            if self.operations > 3 {
+                return
+            }
         }
 
     }
 
-    fn read_word(&self, address: usize) -> u8 {
-        self.interconnect[address]
+    fn ret(&self) {
+        self.pc = self.sp;
+        self.sp = 0; // TODO: what do we do with the stack pointer? put the return value?
+        self.sp = self.sp - 1; // do we just move back "up"?
+    }
+
+    fn jump(&self, address: u16) {
+        self.sp = self.sp + 1;
+        self.interconnect[self.sp] = (self.pc & 8) as u8;
+        self.interconnect[self.sp + 1] = ((self.pc >> 8) & 8) as u8;
+        self.pc = address;
+    }
+
+    // Not sure if this is little-endian or big-endian
+    fn read_word(&self, address: u16) -> u16 {
+        (self.interconnect[address] & 8) as u16 | ((self.interconnect[address + 1] >> 8) & 8) as u16
     }
 
     pub fn reset(&mut self) {
