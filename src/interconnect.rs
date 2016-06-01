@@ -32,21 +32,22 @@ impl Interconnect {
     }
 }
 
-impl Index<usize> for Interconnect {
+impl Index<u16> for Interconnect {
     type Output = u8;
 
-    fn index<'a>(&'a self, index: usize) -> &Self::Output {
+    fn index(&self, index: u16) -> &Self::Output {
         match index {
-            0x0000...0x00FF => &self.boot[index],
-            0x0100...0x7FFF => &self.cart[(index-0x0100) as u16],
-            0x8000...0x9FFF => &self.vram[index-0x8000],
-            0xA000...0xBFFF => &self.xram[index-0xA000],
-            0xC000...0xDFFF => &self.wram[index-0xC000],
-            0xE000...0xFDFF => &self.wram[index-0xE000],
+            0x0000...0x00FF => &self.boot[index - 0],
+            0x0100...0x7FFF => &self.cart[index - 0x0100],
+            0x8000...0x9FFF => &self.vram[index - 0x8000],
+            0xA000...0xBFFF => &self.xram[index - 0xA000],
+            0xC000...0xDFFF => &self.wram[index - 0xC000],
+            0xE000...0xFDFF => &self.wram[index - 0xE000],
             0xFF00 => &self.input,
-            0xFF80...0xFFFE => &self.hram[index-0xFF80],
+            0xFF80...0xFFFE => &self.hram[index - 0xFF80],
             0xFFFF => &self.interrupt,
             _ => panic!("Address {:0>2X} has no known mapping!")
         }
     }
 }
+
