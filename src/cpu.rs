@@ -58,22 +58,24 @@ impl Cpu {
 
     }
 
-    fn ret(&self) {
-        self.pc = self.sp;
-        self.sp = 0; // TODO: what do we do with the stack pointer? put the return value?
-        self.sp = self.sp - 1; // do we just move back "up"?
+    fn ret(&mut self) {
+        //self.pc = self.sp;
+        //self.sp = 0; // TODO: what do we do with the stack pointer? put the return value?
+        //self.sp = self.sp - 1; // do we just move back "up"?
     }
 
     fn jump(&self, address: u16) {
-        self.sp = self.sp + 1;
-        self.interconnect[self.sp] = (self.pc & 8) as u8;
-        self.interconnect[self.sp + 1] = ((self.pc >> 8) & 8) as u8;
-        self.pc = address;
+        //self.sp = self.sp + 1;
+        //self.interconnect[self.sp] = (self.pc & 8) as u8;
+        //self.interconnect[self.sp + 1] = ((self.pc >> 8) & 8) as u8;
+        //self.pc = address;
+        println!("{}", address);
     }
 
     // Not sure if this is little-endian or big-endian
     fn read_word(&self, address: u16) -> u16 {
-        (self.interconnect[address] & 8) as u16 | ((self.interconnect[address + 1] >> 8) & 8) as u16
+        (self.interconnect[address + 0] as u16) << 8 |
+        (self.interconnect[address + 1] as u16)
     }
 
     pub fn reset(&mut self) {
