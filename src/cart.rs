@@ -94,7 +94,15 @@ impl fmt::Display for Cart {
 impl Index<u16> for Cart {
     type Output = u8;
 
-    fn index<'a>(&'a self, index: u16) -> &u8 {
+    fn index(&self, index: u16) -> &u8 {
         &self.mem[index as usize]
+    }
+}
+
+impl Index<usize> for Cart {
+    type Output = u8;
+
+    fn index(&self, index: usize) -> &u8 {
+        &self.mem[index]
     }
 }
