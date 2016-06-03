@@ -3,7 +3,6 @@ mod cpu;
 mod interconnect;
 mod cart;
 mod header;
-mod range;
 
 use std::env;
 use std::fs;
