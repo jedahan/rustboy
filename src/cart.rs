@@ -11,30 +11,28 @@ pub struct Cart {
 
 impl Cart {
     pub fn new(mem: Vec<u8>) -> Cart {
+        let header = |name, range| header::Header::new(name, range);
+
         Cart {
             mem: mem,
             headers: vec![
-                header::Header::new("entry point", 0x100..0x104),
-                header::Header::new("logo", 0x104..0x134),
-                header::Header {
-                    name: "title",
-                    format: "string",
-                    range: 0x134..0x144
-                },
-                header::Header::new("manufacturer", 0x13F..0x142),
-                header::Header::new("color game boy", 0x143..0x144),
-                header::Header::new("new licensee", 0x144..0x146),
-                header::Header::new("super game boy", 0x146..0x147),
-                header::Header::new("cart type", 0x147..0x148),
-                header::Header::new("rom size", 0x148..0x149),
-                header::Header::new("ram size", 0x149..0x14A),
-                header::Header::new("destination", 0x14A..0x14B),
-                header::Header::new("old licensee", 0x14B..0x14C),
-                header::Header::new("make rom version", 0x14C..0x14D),
-                header::Header::new("header checksum", 0x14D..0x14E),
-                header::Header::new("global checksum", 0x14E..0x150),
-                header::Header::new("short header", 0x134..0x14D),
-                header::Header::new("full header", 0x100..0x14F),
+                header("entry point", 0x100..0x104),
+                header("logo", 0x104..0x134),
+                header::Header::with_format("title", 0x134..0x144, "string"),
+                header("manufacturer", 0x13F..0x142),
+                header("color game boy", 0x143..0x144),
+                header("new licensee", 0x144..0x146),
+                header("super game boy", 0x146..0x147),
+                header("cart type", 0x147..0x148),
+                header("rom size", 0x148..0x149),
+                header("ram size", 0x149..0x14A),
+                header("destination", 0x14A..0x14B),
+                header("old licensee", 0x14B..0x14C),
+                header("make rom version", 0x14C..0x14D),
+                header("header checksum", 0x14D..0x14E),
+                header("global checksum", 0x14E..0x150),
+                header("short header", 0x134..0x14D),
+                header("full header", 0x100..0x14F),
             ]
         }
     }
