@@ -58,3 +58,11 @@
 ## 11:30-1:30
 
 Spent two hours trying to split out tests to a subdirectory, but ended up fighting crates. Created a branch called split-out-tests that has more details of the failure. #rust-beginners on irc.mozilla.org was very helpful.
+
+# ???day
+
+I did a bunch of opcode-y stuff, I cannot remember
+
+# Thursday
+
+Most of today was spent doing small cleanups after asking for a code review in #rust-beginners. I am a bit hungover.
