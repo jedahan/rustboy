@@ -7,12 +7,12 @@ pub struct Header {
     pub range: Range<usize>
 }
 
-impl Default for Header {
-    fn default () -> Header {
+impl Header {
+    pub fn new(name: &'static str, range: Range<usize>) -> Header {
         Header {
-            name: "default",
-            format: "",
-            range: 0..1
+            name: name,
+            range: range,
+            format: ""
         }
     }
 }

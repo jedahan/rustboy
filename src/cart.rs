@@ -9,41 +9,32 @@ pub struct Cart {
     pub headers: Vec<header::Header>
 }
 
-fn make_header(name: &'static str, start: usize, end: usize) -> header::Header {
-    header::Header {
-        name: name,
-        range: start..end,
-        ..Default::default()
-    }
-}
-
 impl Default for Cart {
     fn default () -> Cart {
         Cart {
             mem: vec![0],
             headers: vec![
-                make_header("entry point", 0x100, 0x104),
-                make_header("logo", 0x104, 0x134),
+                header::Header::new("entry point", 0x100..0x104),
+                header::Header::new("logo", 0x104..0x134),
                 header::Header {
                     name: "title",
                     format: "string",
-                    range: 0x134..0x144,
-                    ..Default::default()
+                    range: 0x134..0x144
                 },
-                make_header("manufacturer", 0x13F, 0x142), // todo: string
-                make_header("color game boy", 0x143, 0x144),
-                make_header("new licensee", 0x144, 0x146), // todo: string
-                make_header("super game boy", 0x146, 0x147),
-                make_header("cart type", 0x147, 0x148),
-                make_header("rom size", 0x148, 0x149),
-                make_header("ram size", 0x149, 0x14A),
-                make_header("destination", 0x14A, 0x14B),
-                make_header("old licensee", 0x14B, 0x14C),
-                make_header("make rom version", 0x14C, 0x14D),
-                make_header("header checksum", 0x14D, 0x14E),
-                make_header("global checksum", 0x14E, 0x150),
-                make_header("short header", 0x134, 0x14D),
-                make_header("full header", 0x100, 0x14F),
+                header::Header::new("manufacturer", 0x13F..0x142),
+                header::Header::new("color game boy", 0x143..0x144),
+                header::Header::new("new licensee", 0x144..0x146),
+                header::Header::new("super game boy", 0x146..0x147),
+                header::Header::new("cart type", 0x147..0x148),
+                header::Header::new("rom size", 0x148..0x149),
+                header::Header::new("ram size", 0x149..0x14A),
+                header::Header::new("destination", 0x14A..0x14B),
+                header::Header::new("old licensee", 0x14B..0x14C),
+                header::Header::new("make rom version", 0x14C..0x14D),
+                header::Header::new("header checksum", 0x14D..0x14E),
+                header::Header::new("global checksum", 0x14E..0x150),
+                header::Header::new("short header", 0x134..0x14D),
+                header::Header::new("full header", 0x100..0x14F),
             ]
         }
     }
