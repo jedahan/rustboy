@@ -9,10 +9,10 @@ pub struct Cart {
     pub headers: Vec<header::Header>
 }
 
-impl Default for Cart {
-    fn default () -> Cart {
+impl Cart {
+    pub fn new(mem: Vec<u8>) -> Cart {
         Cart {
-            mem: vec![0],
+            mem: mem,
             headers: vec![
                 header::Header::new("entry point", 0x100..0x104),
                 header::Header::new("logo", 0x104..0x134),
@@ -38,9 +38,7 @@ impl Default for Cart {
             ]
         }
     }
-}
 
-impl Cart {
     fn checksum(&self) -> u8 {
         self.mem[0x134..0x14D].iter().fold(0, |a: u8, &b| a.wrapping_sub(b+1))
     }

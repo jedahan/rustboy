@@ -38,10 +38,7 @@ fn load_rom<P: AsRef<Path>>(path: P) -> Vec<u8> {
 }
 
 fn load_cart<P: AsRef<Path>>(path: P) -> cart::Cart {
-    cart::Cart {
-        mem: load_rom(path),
-        ..Default::default()
-    }
+    cart::Cart::new(load_rom(path))
 }
 
 #[test]
