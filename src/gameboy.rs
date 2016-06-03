@@ -27,8 +27,8 @@ impl GameBoy {
 
 impl fmt::Display for GameBoy {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        try!(writeln!(f, "gameboy {{"));
-        try!(writeln!(f, "{}", self.cpu));
-        writeln!(f, "}}")
+        writeln!(f, "gameboy {{
+{}
+}}", self.cpu)
     }
 }

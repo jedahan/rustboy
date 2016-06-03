@@ -109,8 +109,8 @@ impl Cpu {
 
 impl fmt::Display for Cpu {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "
-cpu {{
+        write!(f,
+"cpu {{
   pc: {pc:0>4X}
   sp: {sp:0>4X}
   registers: {{
@@ -119,8 +119,8 @@ cpu {{
   flags: {{
     zero: {zero}, sub: {sub}, half: {half}, carry: {carry}
   }}
-}}
-", pc=self.pc, sp=self.sp,
+}}",
+    pc=self.pc, sp=self.sp,
     a=self.reg_a, f=self.reg_f, b=self.reg_b, c=self.reg_c, d=self.reg_d, e=self.reg_e, h=self.reg_h, l=self.reg_l,
     zero=self.flag_zero(), sub=self.flag_subtract(), half=self.flag_half_carry(), carry=self.flag_carry())
     }
