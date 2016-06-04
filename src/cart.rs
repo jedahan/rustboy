@@ -3,6 +3,8 @@ use header;
 use std::fmt;
 use std::ops::Index;
 
+use header::Header;
+
 #[derive(Debug)]
 pub struct Cart {
     pub mem: Vec<u8>,
@@ -11,28 +13,26 @@ pub struct Cart {
 
 impl Cart {
     pub fn new(mem: Vec<u8>) -> Cart {
-        let header = |name, range| header::Header::new(name, range);
-
         Cart {
             mem: mem,
             headers: vec![
-                header("entry point", 0x100..0x104),
-                header("logo", 0x104..0x134),
-                header::Header::with_format("title", 0x134..0x144, "string"),
-                header("manufacturer", 0x13F..0x142),
-                header("color game boy", 0x143..0x144),
-                header("new licensee", 0x144..0x146),
-                header("super game boy", 0x146..0x147),
-                header("cart type", 0x147..0x148),
-                header("rom size", 0x148..0x149),
-                header("ram size", 0x149..0x14A),
-                header("destination", 0x14A..0x14B),
-                header("old licensee", 0x14B..0x14C),
-                header("make rom version", 0x14C..0x14D),
-                header("header checksum", 0x14D..0x14E),
-                header("global checksum", 0x14E..0x150),
-                header("short header", 0x134..0x14D),
-                header("full header", 0x100..0x14F),
+                Header::new("entry point", 0x100..0x104),
+                Header::new("logo", 0x104..0x134),
+                Header::with_format("title", 0x134..0x144, "string"),
+                Header::new("manufacturer", 0x13F..0x142),
+                Header::new("color game boy", 0x143..0x144),
+                Header::new("new licensee", 0x144..0x146),
+                Header::new("super game boy", 0x146..0x147),
+                Header::new("cart type", 0x147..0x148),
+                Header::new("rom size", 0x148..0x149),
+                Header::new("ram size", 0x149..0x14A),
+                Header::new("destination", 0x14A..0x14B),
+                Header::new("old licensee", 0x14B..0x14C),
+                Header::new("make rom version", 0x14C..0x14D),
+                Header::new("header checksum", 0x14D..0x14E),
+                Header::new("global checksum", 0x14E..0x150),
+                Header::new("short header", 0x134..0x14D),
+                Header::new("full header", 0x100..0x14F),
             ]
         }
     }
