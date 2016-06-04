@@ -1,6 +1,7 @@
 use gameboy;
 use cart;
-const RAM_SIZE: usize = 8 * 1024;
+const RAM_SIZE: usize = 0x0200;
+const VRAM_SIZE: usize = 0x2000;
 const XRAM_SIZE: usize = 0x1FFF;
 const HRAM_SIZE: usize = 0x007F;
 
@@ -10,7 +11,7 @@ pub struct Interconnect {
     boot: [u8; gameboy::BOOTROM_SIZE],
     cart: cart::Cart,
     wram: [u8; RAM_SIZE],
-    vram: [u8; RAM_SIZE],
+    vram: [u8; VRAM_SIZE],
     xram: [u8; XRAM_SIZE],
     input: [u8; 1],
     hram: [u8; HRAM_SIZE],
@@ -23,7 +24,7 @@ impl Interconnect {
             boot: boot,
             cart: cart,
             wram: [0; RAM_SIZE],
-            vram: [0; RAM_SIZE],
+            vram: [0; VRAM_SIZE],
             xram: [0; XRAM_SIZE],
             input: [0],
             hram: [0; HRAM_SIZE],

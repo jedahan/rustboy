@@ -203,8 +203,8 @@ impl Cpu {
         &self.reg_f & (1<<4) > 0
     }
 
-    fn print_stack(&self) -> fmt::Result {
-        println!("stack: ");
+    fn print_stack_and_vram(&self) -> fmt::Result {
+        println!("stack: \t\tvram:");
         let height: usize = 0xF;
         let mut depth = 0;
 
@@ -214,7 +214,13 @@ impl Cpu {
             if byte == self.sp as usize {
                 sp = "❯";
             }
-            println!("{arrow} 0x{address:0>4X}: {value:0>2X}", arrow=sp, address=byte, value=self.interconnect[byte]);
+            println!("{arrow} 0x{saddr:0>4X}: {sval:0>2X} \t  0x{vaddr:0>4X}: {vval:0>2X} \t\t",
+                arrow=sp,
+                saddr=byte,
+                sval=self.interconnect[byte],
+                vaddr=byte-0x6000,
+                vval=self.interconnect[byte-0x5000]
+            );
             depth = depth + 1;
         }
         Ok(())
@@ -236,6 +242,6 @@ impl fmt::Display for Cpu {
     a=self.reg_a, f=self.reg_f, b=self.reg_b, c=self.reg_c, d=self.reg_d, e=self.reg_e, h=self.reg_h, l=self.reg_l,
     zero=self.flag_zero(), sub=self.flag_subtract(), half=self.flag_half_carry(), carry=self.flag_carry()));
 
-    self.print_stack()
+    self.print_stack_and_vram()
     }
 }
