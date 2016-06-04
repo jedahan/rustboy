@@ -44,7 +44,11 @@ impl Cpu {
 
             match opcode {
                 0x00 => println!("NOP"),
-                0xC3 => self.jump(self.read_word(self.pc + 1)),
+                0xC3 => {
+                    let pc_address = self.pc + 1;
+                    let jump_address = self.read_word(pc_address);
+                    self.jump(jump_address);
+                }
                 0xC9 => self.ret(),
                 _ => panic!("unrecognized opcode {:0>2X}", opcode)
             }
