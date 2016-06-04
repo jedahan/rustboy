@@ -11,6 +11,7 @@ Inspired by [Ferris Makes Emulators](https://www.youtube.com/playlist?list=PL-sX
 - [the gbdev wiki](http://gbdev.gg8.se/wiki/articles/Gameboy_Bootstrap_ROM) for bootstrap rom and other reference material,
 - [mmuszkow's game boy disassembler](https://github.com/mmuszkow/gb-disasm) for letting me understand and debug all the roms,
 - [ASMschool](http://gameboy.mongenel.com/asmschool.html) for dev-oriented writing
+- [#rust-beginners](irc://irc.mozilla.org/rust-beginners) for being friendly
 
 
 # documentation
