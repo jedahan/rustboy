@@ -1,7 +1,7 @@
 use header;
 
 use std::fmt;
-use std::ops::Index;
+use std::ops::{Index, IndexMut};
 
 use header::Header;
 
@@ -91,5 +91,17 @@ impl Index<usize> for Cart {
 
     fn index(&self, index: usize) -> &u8 {
         &self.mem[index]
+    }
+}
+
+impl IndexMut<u16> for Cart {
+    fn index_mut(&mut self, index: u16) -> &mut u8 {
+        &mut self.mem[index as usize]
+    }
+}
+
+impl IndexMut<usize> for Cart {
+    fn index_mut(&mut self, index: usize) -> &mut u8 {
+        &mut self.mem[index]
     }
 }

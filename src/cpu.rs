@@ -59,17 +59,21 @@ impl Cpu {
     }
 
     fn ret(&mut self) {
-        //self.pc = self.sp;
-        //self.sp = 0; // TODO: what do we do with the stack pointer? put the return value?
-        //self.sp = self.sp - 1; // do we just move back "up"?
+        self.pc = self.sp;
+        self.sp = 0x0000; // TODO: what do we do with the stack pointer? put the return value?
+        self.sp = self.sp + 2; // move back "up"
     }
 
-    fn jump(&self, address: u16) {
-        //self.sp = self.sp + 1;
-        //self.interconnect[self.sp] = (self.pc & 8) as u8;
-        //self.interconnect[self.sp + 1] = ((self.pc >> 8) & 8) as u8;
-        //self.pc = address;
-        println!("{}", address);
+    /* when we jump to a new address, make sure to save the current program counter
+     * address to the bottom of the stack, so when we can return to the current address
+     */
+    fn jump(&mut self, address: u16) {
+        self.sp = self.sp - 2;
+        let address_high = ((self.pc >> 0) & 8) as u8;
+        let address_low  = ((self.pc >> 8) & 8) as u8;
+        self.interconnect[self.sp + 0] = address_high;
+        self.interconnect[self.sp + 1] = address_low;
+        self.pc = address;
     }
 
     // Not sure if this is little-endian or big-endian
