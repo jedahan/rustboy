@@ -55,7 +55,7 @@ impl Cpu {
 
             self.operations = self.operations + 1;
             self.pc = self.pc + 1;
-            if self.operations > 3 {
+            if self.operations > 5 {
                 return
             }
         }
@@ -66,6 +66,8 @@ impl Cpu {
         self.pc = self.sp;
         self.sp = 0x0000; // TODO: what do we do with the stack pointer? put the return value?
         self.sp = self.sp + 2; // move back "up"
+
+        println!("returned! cpu is {}", self);
     }
 
     /* when we jump to a new address, make sure to save the current program counter
@@ -78,6 +80,8 @@ impl Cpu {
         self.interconnect[self.sp + 0] = address_high;
         self.interconnect[self.sp + 1] = address_low;
         self.pc = address;
+
+        println!("jumped! cpu is {}", self);
     }
 
     // Not sure if this is little-endian or big-endian
@@ -117,11 +121,28 @@ impl Cpu {
     fn flag_carry(&self) -> bool {
         &self.reg_f & (1<<4) > 0
     }
+
+    fn print_stack(&self) -> fmt::Result {
+        println!("stack: ");
+        let height: usize = 0xF;
+        let mut depth = 0;
+
+        while depth < height {
+            let byte = 0xFFFF - depth;
+            let mut sp = " ";
+            if byte == self.sp as usize {
+                sp = "❯";
+            }
+            println!("{arrow} 0x{address:0>4X}: {value:0>2X}", arrow=sp, address=byte, value=self.interconnect[byte]);
+            depth = depth + 1;
+        }
+        Ok(())
+    }
 }
 
 impl fmt::Display for Cpu {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f,
+        try!(writeln!(f,
 "cpu {{
   pc: {pc:0>4X}
   sp: {sp:0>4X}
@@ -134,6 +155,8 @@ impl fmt::Display for Cpu {
 }}",
     pc=self.pc, sp=self.sp,
     a=self.reg_a, f=self.reg_f, b=self.reg_b, c=self.reg_c, d=self.reg_d, e=self.reg_e, h=self.reg_h, l=self.reg_l,
-    zero=self.flag_zero(), sub=self.flag_subtract(), half=self.flag_half_carry(), carry=self.flag_carry())
+    zero=self.flag_zero(), sub=self.flag_subtract(), half=self.flag_half_carry(), carry=self.flag_carry()));
+
+    self.print_stack()
     }
 }

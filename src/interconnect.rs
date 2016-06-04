@@ -2,7 +2,7 @@ use gameboy;
 use cart;
 const RAM_SIZE: usize = 8 * 1024;
 const XRAM_SIZE: usize = 0x1FFF;
-const HRAM_SIZE: usize = 0x007E;
+const HRAM_SIZE: usize = 0x007F;
 
 use std::ops::{Index, IndexMut};
 
