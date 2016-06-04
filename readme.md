@@ -17,6 +17,18 @@ Inspired by [Ferris Makes Emulators](https://www.youtube.com/playlist?list=PL-sX
 
 I am trying to verbosely write about the creation process. Please see the [development log](development_log.md) for a narrative, and [notes](notes.md) for more of a scratchpad.
 
+Some of the better commit messages:
+
+- [reading and printing a header from a rom](https://github.com/jedahan/rustboy/commit/46ea2281800509695aff5d40cfe4a0bb9ded53d3)
+- [implementing checksum for the game boy rom](https://github.com/jedahan/rustboy/commit/950cd6832a3f301bc92c2663aee638eb866d75ee)
+- [first multiline commit message](https://github.com/jedahan/rustboy/commit/3adc7060f288cbb14679d25cd4b2b0a194ee42e0)
+- [what its like to stare at numbers for a long time](https://github.com/jedahan/rustboy/commit/a32784362a0e941c0b49044229d57d32f474407a)
+- [how to model a virtual processor](https://github.com/jedahan/rustboy/commit/356cea58c801b7b04eab87ecbe8c26ae04c2ff16)
+- [blindly copying ferris](https://github.com/jedahan/rustboy/commit/f0254ea50426258105dcf8017457687978dcefe8)
+- [starting to understand differences between arrays, slices and vectors](https://github.com/jedahan/rustboy/commit/12328eb87d5eabbdccdcf297e74bdba668958873)
+- *[memory mapping / difficulties implementing a trait in rust](https://github.com/jedahan/rustboy/commit/92a215f7a6746de2114332d0463e8a667c6b8689)
+- *[the first version of the emulator that runs an emulated instruction!](https://github.com/jedahan/rustboy/commit/48155ecf49892a1835dd44be35a2c6a0c513b0e0)
+
 # using
 
 To install dependencies
