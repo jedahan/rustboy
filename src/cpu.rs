@@ -93,17 +93,21 @@ impl Cpu {
         self.reg_h = 0x01;
         self.reg_l = 0x4D;
     }
+
     fn flag_zero(&self) -> bool {
-        &self.reg_f & 0b10000000 > 0
+        &self.reg_f & (1<<7) > 0
     }
+
     fn flag_subtract(&self) -> bool {
-        &self.reg_f & 0b01000000 > 0
+        &self.reg_f & (1<<6) > 0
     }
+
     fn flag_half_carry(&self) -> bool {
-        &self.reg_f & 0b00100000 > 0
+        &self.reg_f & (1<<5) > 0
     }
+
     fn flag_carry(&self) -> bool {
-        &self.reg_f & 0b00010000 > 0
+        &self.reg_f & (1<<4) > 0
     }
 }
 
