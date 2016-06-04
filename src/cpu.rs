@@ -48,6 +48,40 @@ impl Cpu {
                     self.pc = self.pc + 1;
                     continue;
                 }
+                0x21 => {
+                    self.pc += 1;
+                    self.reg_l = self.interconnect[self.pc];
+                    self.pc += 1;
+                    self.reg_h = self.interconnect[self.pc];
+                    self.pc += 1;
+                    println!("LD HL, d16");
+                }
+                0x31 => {
+                    self.pc = self.pc + 1;
+                    let address = self.read_word(self.pc);
+                    self.sp = address;
+                    println!("LD SP, {:0>4x}", address);
+                    self.pc = self.pc + 2;
+                }
+                0x32 => {
+                    //println!("ldd (HL),A");
+                    // Stands for Load and Decrement
+                    self.pc = self.pc + 1;
+                    let address = ((self.reg_h as u16) << 8) |
+                                  ((self.reg_l as u16) << 0);
+                    println!("LDD {:0>4X}, A", address);
+                    self.interconnect[address] = self.reg_a - 1;
+                }
+                0xAF => {
+                    self.pc = self.pc + 1;
+                    // the docs say this zeros out $8000-$FFFE
+                    // I am not sure if that means load 0 into $8000->self.reg_sp
+                    // or actually xor $8000->self.reg_sp
+                    // it should only take 4 clock cycles, and we are already are zero'd out
+                    // so I think we are fine doing basically nothing
+                    // TODO: figure out what this actually does.
+                    println!("XOR A");
+                }
                 0xC3 => {
                     let pc_address = self.pc + 1;
                     let jump_address = self.read_word(pc_address);
@@ -60,6 +94,7 @@ impl Cpu {
                     let value = self.interconnect[address];
                     self.reg_a = value;
                     println!("LDH ({}), A", offset);
+                    self.pc = self.pc + 2;
                 }
                 0xE1 => {
                     self.sp = self.sp + 1;
@@ -77,7 +112,17 @@ impl Cpu {
                 }
                 0xCB => {
                     println!("Z80 command prefix");
-                    continue;
+                    self.pc += 1;
+                    let z80opcode = self.interconnect[self.pc];
+                    match z80opcode {
+                        0x7C => {
+                            self.pc += 1;
+                            let reg_h = self.reg_h;
+                            self.reg_h = self.bit_shift(7, reg_h);
+                            println!("BIT 7, H");
+                        }
+                        _ => panic!("unrecognized z80opcode {:0>2X}", opcode)
+                    }
                 }
                 _ => panic!("unrecognized opcode {:0>2X}", opcode)
             }
@@ -86,6 +131,20 @@ impl Cpu {
             println!("{}", self);
         }
 
+    }
+
+    fn bit_shift(&mut self, amount: u8, reg: u8) -> u8 {
+        self.unset_subtract();
+        self.set_half_carry();
+        reg >> amount
+    }
+
+    fn unset_subtract(&mut self) {
+        self.reg_f = self.reg_f & ! (1<<6);
+    }
+
+    fn set_half_carry(&mut self) {
+        self.reg_f = self.reg_f | (1<<5);
     }
 
     fn ret(&mut self) {
@@ -113,7 +172,7 @@ impl Cpu {
     }
 
     pub fn reset(&mut self) {
-        self.pc = 0x0100;
+        self.pc = 0x0000;
         self.sp = 0xFFFE;
         self.reg_a = 0x01;
         self.reg_f = 0xB0;
