@@ -6,12 +6,13 @@ Inspired by [Ferris Makes Emulators](https://www.youtube.com/playlist?list=PL-sX
 
 # thanks
 
-- to [Dissecting the Game Boy](https://www.youtube.com/watch?v=ecTQVa42sJc) for an accessible visual overview,
-- [Past Raiser's opcode chart](http://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html) for a succinct chart of all opcodes,
-- [the gbdev wiki](http://gbdev.gg8.se/wiki/articles/Gameboy_Bootstrap_ROM) for bootstrap rom and other reference material,
-- [mmuszkow's game boy disassembler](https://github.com/mmuszkow/gb-disasm) for letting me understand and debug all the roms,
+- to [Dissecting the Game Boy](https://www.youtube.com/watch?v=ecTQVa42sJc) for an accessible visual overview
+- [Past Raiser's opcode chart](http://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html) for a succinct chart of all opcodes
+- [the gbdev wiki](http://gbdev.gg8.se/wiki/articles/Gameboy_Bootstrap_ROM) for bootstrap rom and other reference material
+- [mmuszkow's game boy disassembler](https://github.com/mmuszkow/gb-disasm) for letting me understand and debug all the roms
 - [ASMschool](http://gameboy.mongenel.com/asmschool.html) for dev-oriented writing
 - [#rust-beginners](irc://irc.mozilla.org/rust-beginners) for being friendly
+- [8080, z80, gameboy~z80, and 6502 opcode comparison](http://www.chrisantonellis.com/files/gameboy/8080_z80_6502.txt) gameboy~z80 is funky
 
 
 # documentation
