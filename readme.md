@@ -17,7 +17,7 @@ Inspired by [Ferris Makes Emulators](https://www.youtube.com/playlist?list=PL-sX
 
 I am trying to verbosely write about the creation process. Please see the [development log](development_log.md) for a narrative, and [notes](notes.md) for more of a scratchpad.
 
-Some of the better commit messages:
+Some of the more interesting commits, due to documentation and understanding of the game boy, emulators, or rust:
 
 - [reading and printing a header from a rom](https://github.com/jedahan/rustboy/commit/46ea2281800509695aff5d40cfe4a0bb9ded53d3)
 - [implementing checksum for the game boy rom](https://github.com/jedahan/rustboy/commit/950cd6832a3f301bc92c2663aee638eb866d75ee)
