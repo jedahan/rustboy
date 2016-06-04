@@ -66,3 +66,19 @@ I did a bunch of opcode-y stuff, I cannot remember
 # Thursday
 
 Most of today was spent doing small cleanups after asking for a code review in #rust-beginners. I am a bit hungover.
+
+# Saturday
+
+Made good progress today implementing bytecodes:
+
+    LD HL, d16
+    LD SP, (PC)
+    LDD (HL), A
+    XOR A
+    LDH (PC), A
+    BIT 7, H
+
+Started by loading what we needed for tetris, then changed the program counter to 0 and now attempting just
+what is needed for bootstrapping. Soon will have to implement drawing graphics :).
+
+Will probably have to skip audio operations for a little bit, anxious to see the nintendo logo.
