@@ -75,13 +75,13 @@ impl Cpu {
      */
     fn jump(&mut self, address: u16) {
         self.sp = self.sp - 2;
-        let address_high = ((self.pc >> 0) & 8) as u8;
-        let address_low  = ((self.pc >> 8) & 8) as u8;
+        let address_high = (self.pc >> 0) as u8;
+        let address_low  = (self.pc >> 8) as u8;
         self.interconnect[self.sp + 0] = address_high;
         self.interconnect[self.sp + 1] = address_low;
         self.pc = address;
 
-        println!("jumped! cpu is {}", self);
+        println!("jumped from {:0>2X}{:0>2X} to {:0>4X}! cpu is {}", address_high, address_low, self.pc, self);
     }
 
     // Not sure if this is little-endian or big-endian
