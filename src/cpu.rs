@@ -39,25 +39,51 @@ impl Cpu {
 
     pub fn run(&mut self) {
         println!("I am running!");
-        while self.pc < 0x250 {
+        while self.operations < 5 {
             let opcode = self.interconnect[self.pc];
 
             match opcode {
-                0x00 => println!("NOP"),
+                0x00 => {
+                    println!("NOP");
+                    self.pc = self.pc + 1;
+                    continue;
+                }
                 0xC3 => {
                     let pc_address = self.pc + 1;
                     let jump_address = self.read_word(pc_address);
+                    println!("JMP {:0>4X}", jump_address);
                     self.jump(jump_address);
                 }
-                0xC9 => self.ret(),
+                0xE0 => {
+                    let offset = self.interconnect[self.pc+1];
+                    let address = 0xFF00 + offset as u16;
+                    let value = self.interconnect[address];
+                    self.reg_a = value;
+                    println!("LDH ({}), A", offset);
+                }
+                0xE1 => {
+                    self.sp = self.sp + 1;
+                    self.reg_h = self.interconnect[self.sp];
+                    self.interconnect[self.sp] = 0;
+                    self.sp = self.sp + 1;
+                    self.reg_l = self.interconnect[self.sp];
+                    self.interconnect[self.sp] = 0;
+                    println!("POP HL");
+                    self.pc = self.pc + 1;
+                }
+                0xC9 => {
+                    self.ret();
+                    println!("RET");
+                }
+                0xCB => {
+                    println!("Z80 command prefix");
+                    continue;
+                }
                 _ => panic!("unrecognized opcode {:0>2X}", opcode)
             }
 
             self.operations = self.operations + 1;
-            self.pc = self.pc + 1;
-            if self.operations > 5 {
-                return
-            }
+            println!("{}", self);
         }
 
     }
@@ -66,8 +92,6 @@ impl Cpu {
         self.pc = self.sp;
         self.sp = 0x0000; // TODO: what do we do with the stack pointer? put the return value?
         self.sp = self.sp + 2; // move back "up"
-
-        println!("returned! cpu is {}", self);
     }
 
     /* when we jump to a new address, make sure to save the current program counter
@@ -80,14 +104,12 @@ impl Cpu {
         self.interconnect[self.sp + 0] = address_high;
         self.interconnect[self.sp + 1] = address_low;
         self.pc = address;
-
-        println!("jumped from {:0>2X}{:0>2X} to {:0>4X}! cpu is {}", address_high, address_low, self.pc, self);
     }
 
     // Not sure if this is little-endian or big-endian
     fn read_word(&self, address: u16) -> u16 {
-        (self.interconnect[address + 0] as u16) << 8 |
-        (self.interconnect[address + 1] as u16)
+        (self.interconnect[address + 1] as u16) << 8 |
+        (self.interconnect[address + 0] as u16)
     }
 
     pub fn reset(&mut self) {
@@ -144,16 +166,14 @@ impl fmt::Display for Cpu {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         try!(writeln!(f,
 "cpu {{
-  pc: {pc:0>4X}
+  pc: {pc:0>4X} [{i0:0>2X} {i1:0>2X} {i2:0>2X} {i3:0>2X}]
   sp: {sp:0>4X}
-  registers: {{
-    a: {a:0>2X}, f: {f:0>2X}, b: {b:0>2X}, c: {c:0>2X}, d: {d:0>2X}, e: {e:0>2X}, h: {h:0>2X}, l: {l:0>2X}
-  }}
-  flags: {{
-    zero: {zero}, sub: {sub}, half: {half}, carry: {carry}
-  }}
+  registers: {{ a: {a:0>2X}, f: {f:0>2X}, b: {b:0>2X}, c: {c:0>2X}, d: {d:0>2X}, e: {e:0>2X}, h: {h:0>2X}, l: {l:0>2X} }}
+  flags: {{ zero: {zero}, sub: {sub}, half: {half}, carry: {carry} }}
+  instructions: {{}}
 }}",
-    pc=self.pc, sp=self.sp,
+    pc=self.pc, i0=self.interconnect[self.pc+0], i1=self.interconnect[self.pc+1], i2=self.interconnect[self.pc+2], i3=self.interconnect[self.pc+3],
+    sp=self.sp,
     a=self.reg_a, f=self.reg_f, b=self.reg_b, c=self.reg_c, d=self.reg_d, e=self.reg_e, h=self.reg_h, l=self.reg_l,
     zero=self.flag_zero(), sub=self.flag_subtract(), half=self.flag_half_carry(), carry=self.flag_carry()));
 
