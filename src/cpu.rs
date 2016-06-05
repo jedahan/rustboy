@@ -2,6 +2,11 @@ use std::fmt;
 
 use interconnect;
 
+pub const ZERO_BIT: u8 = 1 << 7;
+pub const SUBTRACT_BIT: u8 = 1 << 6;
+pub const HALFCARRY_BIT: u8 = 1 << 5;
+pub const CARRY_BIT: u8 = 1 << 4;
+
 pub struct Cpu {
     pc: u16,
     sp: u16,
@@ -187,44 +192,10 @@ impl Cpu {
         self.reg_l = 0x4D;
     }
 
-    fn flag_zero(&self) -> bool {
-        &self.reg_f & (1<<7) > 0
-    }
-
-    fn flag_subtract(&self) -> bool {
-        &self.reg_f & (1<<6) > 0
-    }
-
-    fn flag_half_carry(&self) -> bool {
-        &self.reg_f & (1<<5) > 0
-    }
-
-    fn flag_carry(&self) -> bool {
-        &self.reg_f & (1<<4) > 0
-    }
-
-    fn print_stack_and_vram(&self) -> fmt::Result {
-        println!("stack: \t\tvram:");
-        let height: usize = 0xF;
-        let mut depth = 0;
-
-        while depth < height {
-            let byte = 0xFFFF - depth;
-            let mut sp = " ";
-            if byte == self.sp as usize {
-                sp = "❯";
-            }
-            println!("{arrow} 0x{saddr:0>4X}: {sval:0>2X} \t  0x{vaddr:0>4X}: {vval:0>2X} \t\t",
-                arrow=sp,
-                saddr=byte,
-                sval=self.interconnect[byte],
-                vaddr=byte-0x6000,
-                vval=self.interconnect[byte-0x5000]
-            );
-            depth = depth + 1;
-        }
-        Ok(())
-    }
+    fn flag_zero(&self) -> bool { &self.reg_f & ZERO_BIT > 0 }
+    fn flag_subtract(&self) -> bool { &self.reg_f & SUBTRACT_BIT > 0 }
+    fn flag_halfcarry(&self) -> bool { &self.reg_f & HALFCARRY_BIT > 0 }
+    fn flag_carry(&self) -> bool { &self.reg_f & CARRY_BIT > 0 }
 }
 
 impl fmt::Display for Cpu {
