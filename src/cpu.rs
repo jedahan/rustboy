@@ -42,6 +42,36 @@ impl Cpu {
         }
     }
 
+    fn flag_zero(&self) -> bool { &self.reg_f & ZERO_BIT > 0 }
+    fn flag_subtract(&self) -> bool { &self.reg_f & SUBTRACT_BIT > 0 }
+    fn flag_halfcarry(&self) -> bool { &self.reg_f & HALFCARRY_BIT > 0 }
+    fn flag_carry(&self) -> bool { &self.reg_f & CARRY_BIT > 0 }
+
+    fn set(&mut self, bit: u8) { self.reg_f |= bit; }
+    fn unset(&mut self, bit: u8) { self.reg_f &= ! bit; }
+
+    // Not sure if this is little-endian or big-endian
+    fn read_word(&self, address: u16) -> u16 {
+        (self.interconnect[address + 1] as u16) << 8 |
+        (self.interconnect[address + 0] as u16)
+    }
+
+    pub fn reset(&mut self) {
+        self.pc = 0x0000;
+        self.sp = 0xFFFE;
+        self.reg_a = 0x01;
+        self.reg_f = 0xB0;
+
+        self.reg_b = 0x00;
+        self.reg_c = 0x13;
+
+        self.reg_d = 0x00;
+        self.reg_e = 0xD8;
+
+        self.reg_h = 0x01;
+        self.reg_l = 0x4D;
+    }
+
     pub fn run(&mut self) {
         println!("rustboy is running");
         loop {
@@ -138,17 +168,9 @@ impl Cpu {
     }
 
     fn bit_shift(&mut self, amount: u8, reg: u8) -> u8 {
-        self.unset_subtract();
-        self.set_half_carry();
+        self.unset(SUBTRACT_BIT);
+        self.set(HALFCARRY_BIT);
         reg >> amount
-    }
-
-    fn unset_subtract(&mut self) {
-        self.reg_f = self.reg_f & ! (1<<6);
-    }
-
-    fn set_half_carry(&mut self) {
-        self.reg_f = self.reg_f | (1<<5);
     }
 
     fn ret(&mut self) {
@@ -168,33 +190,6 @@ impl Cpu {
         self.interconnect[self.sp + 1] = address_low;
         self.pc = address;
     }
-
-    // Not sure if this is little-endian or big-endian
-    fn read_word(&self, address: u16) -> u16 {
-        (self.interconnect[address + 1] as u16) << 8 |
-        (self.interconnect[address + 0] as u16)
-    }
-
-    pub fn reset(&mut self) {
-        self.pc = 0x0000;
-        self.sp = 0xFFFE;
-        self.reg_a = 0x01;
-        self.reg_f = 0xB0;
-
-        self.reg_b = 0x00;
-        self.reg_c = 0x13;
-
-        self.reg_d = 0x00;
-        self.reg_e = 0xD8;
-
-        self.reg_h = 0x01;
-        self.reg_l = 0x4D;
-    }
-
-    fn flag_zero(&self) -> bool { &self.reg_f & ZERO_BIT > 0 }
-    fn flag_subtract(&self) -> bool { &self.reg_f & SUBTRACT_BIT > 0 }
-    fn flag_halfcarry(&self) -> bool { &self.reg_f & HALFCARRY_BIT > 0 }
-    fn flag_carry(&self) -> bool { &self.reg_f & CARRY_BIT > 0 }
 }
 
 impl fmt::Display for Cpu {
