@@ -43,42 +43,41 @@ impl Cpu {
     }
 
     pub fn run(&mut self) {
-        println!("I am running!");
-        while self.operations < 5 {
+        println!("rustboy is running");
+        loop {
             let opcode = self.interconnect[self.pc];
 
             match opcode {
                 0x00 => {
                     println!("NOP");
-                    self.pc = self.pc + 1;
-                    continue;
+                }
+                0x20 => {
+                    println!("JR NZ,r8");
                 }
                 0x21 => {
                     self.pc += 1;
                     self.reg_l = self.interconnect[self.pc];
                     self.pc += 1;
                     self.reg_h = self.interconnect[self.pc];
-                    self.pc += 1;
                     println!("LD HL, d16");
                 }
                 0x31 => {
                     self.pc = self.pc + 1;
                     let address = self.read_word(self.pc);
                     self.sp = address;
+                    self.pc = self.pc + 1;
                     println!("LD SP, {:0>4x}", address);
-                    self.pc = self.pc + 2;
                 }
                 0x32 => {
                     //println!("ldd (HL),A");
                     // Stands for Load and Decrement
-                    self.pc = self.pc + 1;
+                    // TODO: set the zero flag if something bad happened
                     let address = ((self.reg_h as u16) << 8) |
                                   ((self.reg_l as u16) << 0);
                     println!("LDD {:0>4X}, A", address);
                     self.interconnect[address] = self.reg_a - 1;
                 }
                 0xAF => {
-                    self.pc = self.pc + 1;
                     // the docs say this zeros out $8000-$FFFE
                     // I am not sure if that means load 0 into $8000->self.reg_sp
                     // or actually xor $8000->self.reg_sp
@@ -92,6 +91,7 @@ impl Cpu {
                     let jump_address = self.read_word(pc_address);
                     println!("JMP {:0>4X}", jump_address);
                     self.jump(jump_address);
+                    self.pc -= 1; // TODO: CHECK THIS
                 }
                 0xE0 => {
                     let offset = self.interconnect[self.pc+1];
@@ -99,7 +99,7 @@ impl Cpu {
                     let value = self.interconnect[address];
                     self.reg_a = value;
                     println!("LDH ({}), A", offset);
-                    self.pc = self.pc + 2;
+                    self.pc = self.pc + 1;
                 }
                 0xE1 => {
                     self.sp = self.sp + 1;
@@ -109,29 +109,28 @@ impl Cpu {
                     self.reg_l = self.interconnect[self.sp];
                     self.interconnect[self.sp] = 0;
                     println!("POP HL");
-                    self.pc = self.pc + 1;
                 }
                 0xC9 => {
                     self.ret();
                     println!("RET");
+                    self.pc = self.pc - 1; // TODO CHECKME
                 }
                 0xCB => {
-                    println!("Z80 command prefix");
                     self.pc += 1;
                     let z80opcode = self.interconnect[self.pc];
                     match z80opcode {
                         0x7C => {
-                            self.pc += 1;
                             let reg_h = self.reg_h;
                             self.reg_h = self.bit_shift(7, reg_h);
                             println!("BIT 7, H");
                         }
-                        _ => panic!("unrecognized z80opcode {:0>2X}", opcode)
+                        _ => panic!("unrecognized z80 opcode {:0>2X}", opcode)
                     }
                 }
                 _ => panic!("unrecognized opcode {:0>2X}", opcode)
             }
 
+            self.pc += 1;
             self.operations = self.operations + 1;
             println!("{}", self);
         }
