@@ -2,10 +2,10 @@ use std::fmt;
 
 use interconnect;
 
-pub const ZERO_BIT: u8 = 1 << 7;
-pub const SUBTRACT_BIT: u8 = 1 << 6;
-pub const HALFCARRY_BIT: u8 = 1 << 5;
-pub const CARRY_BIT: u8 = 1 << 4;
+pub const FLAG_ZERO: u8 = 1 << 7;
+pub const FLAG_SUBTRACT: u8 = 1 << 6;
+pub const FLAG_HALFCARRY: u8 = 1 << 5;
+pub const FLAG_CARRY: u8 = 1 << 4;
 
 pub struct Cpu {
     pc: u16,
@@ -42,10 +42,10 @@ impl Cpu {
         }
     }
 
-    fn flag_zero(&self) -> bool { &self.reg_f & ZERO_BIT > 0 }
-    fn flag_subtract(&self) -> bool { &self.reg_f & SUBTRACT_BIT > 0 }
-    fn flag_halfcarry(&self) -> bool { &self.reg_f & HALFCARRY_BIT > 0 }
-    fn flag_carry(&self) -> bool { &self.reg_f & CARRY_BIT > 0 }
+    fn flag_zero(&self) -> bool { &self.reg_f & FLAG_ZERO > 0 }
+    fn flag_subtract(&self) -> bool { &self.reg_f & FLAG_SUBTRACT > 0 }
+    fn flag_halfcarry(&self) -> bool { &self.reg_f & FLAG_HALFCARRY > 0 }
+    fn flag_carry(&self) -> bool { &self.reg_f & FLAG_CARRY > 0 }
 
     fn set(&mut self, bit: u8) { self.reg_f |= bit; }
     fn unset(&mut self, bit: u8) { self.reg_f &= ! bit; }
@@ -168,8 +168,8 @@ impl Cpu {
     }
 
     fn bit_shift(&mut self, amount: u8, reg: u8) -> u8 {
-        self.unset(SUBTRACT_BIT);
-        self.set(HALFCARRY_BIT);
+        self.unset(FLAG_SUBTRACT);
+        self.set(FLAG_HALFCARRY);
         reg >> amount
     }
 
