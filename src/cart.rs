@@ -1,7 +1,7 @@
 use header;
 
 use std::fmt;
-use std::ops::{Index, IndexMut};
+use std::ops::{Index, IndexMut, Range};
 
 use header::Header;
 
@@ -103,5 +103,20 @@ impl IndexMut<u16> for Cart {
 impl IndexMut<usize> for Cart {
     fn index_mut(&mut self, index: usize) -> &mut u8 {
         &mut self.mem[index]
+    }
+}
+
+impl Index<Range<u16>> for Cart {
+    type Output = [u8];
+    fn index(&self, range: Range<u16>) -> &Self::Output{
+        let usize_range = (range.start as usize)..(range.end as usize);
+        &self[usize_range]
+    }
+}
+
+impl Index<Range<usize>> for Cart {
+    type Output = [u8];
+    fn index(&self, range: Range<usize>) -> &Self::Output{
+        &self.mem[range]
     }
 }

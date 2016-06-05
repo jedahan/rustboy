@@ -1,6 +1,8 @@
 use std::fmt;
 
 use interconnect;
+use std::fmt::Write;
+use std::env;
 
 pub const FLAG_ZERO: u8 = 1 << 7;
 pub const FLAG_SUBTRACT: u8 = 1 << 6;
@@ -19,12 +21,17 @@ pub struct Cpu {
     reg_h: u8,
     reg_l: u8,
     operations: u8,
+    debug: bool,
 
     interconnect: interconnect::Interconnect
 }
 
 impl Cpu {
     pub fn new(interconnect: interconnect::Interconnect) -> Cpu {
+        let debug = match env::var("DEBUG") {
+            Ok(_) => true,
+            _ => false
+        };
         Cpu {
             pc: 0,
             sp: 0,
@@ -37,6 +44,7 @@ impl Cpu {
             reg_h: 0,
             reg_l: 0,
             operations: 0,
+            debug: debug,
 
             interconnect: interconnect
         }
@@ -75,120 +83,163 @@ impl Cpu {
     pub fn run(&mut self) {
         println!("rustboy is running");
         loop {
-            let opcode = self.interconnect[self.pc];
-
-            match opcode {
-                0x00 => {
-                    println!("NOP");
-                }
-                0x20 => {
-                    println!("JR NZ,r8");
-                }
-                0x21 => {
-                    self.pc += 1;
-                    self.reg_l = self.interconnect[self.pc];
-                    self.pc += 1;
-                    self.reg_h = self.interconnect[self.pc];
-                    println!("LD HL, d16");
-                }
-                0x31 => {
-                    self.pc = self.pc + 1;
-                    let address = self.read_word(self.pc);
-                    self.sp = address;
-                    self.pc = self.pc + 1;
-                    println!("LD SP, {:0>4x}", address);
-                }
-                0x32 => {
-                    //println!("ldd (HL),A");
-                    // Stands for Load and Decrement
-                    // TODO: set the zero flag if something bad happened
-                    let address = ((self.reg_h as u16) << 8) |
-                                  ((self.reg_l as u16) << 0);
-                    println!("LDD {:0>4X}, A", address);
-                    self.interconnect[address] = self.reg_a - 1;
-                }
-                0xAF => {
-                    // the docs say this zeros out $8000-$FFFE
-                    // I am not sure if that means load 0 into $8000->self.reg_sp
-                    // or actually xor $8000->self.reg_sp
-                    // it should only take 4 clock cycles, and we are already are zero'd out
-                    // so I think we are fine doing basically nothing
-                    // TODO: figure out what this actually does.
-                    println!("XOR A");
-                }
-                0xC3 => {
-                    let pc_address = self.pc + 1;
-                    let jump_address = self.read_word(pc_address);
-                    println!("JMP {:0>4X}", jump_address);
-                    self.jump(jump_address);
-                    self.pc -= 1; // TODO: CHECK THIS
-                }
-                0xE0 => {
-                    let offset = self.interconnect[self.pc+1];
-                    let address = 0xFF00 + offset as u16;
-                    let value = self.interconnect[address];
-                    self.reg_a = value;
-                    println!("LDH ({}), A", offset);
-                    self.pc = self.pc + 1;
-                }
-                0xE1 => {
-                    self.sp = self.sp + 1;
-                    self.reg_h = self.interconnect[self.sp];
-                    self.interconnect[self.sp] = 0;
-                    self.sp = self.sp + 1;
-                    self.reg_l = self.interconnect[self.sp];
-                    self.interconnect[self.sp] = 0;
-                    println!("POP HL");
-                }
-                0xC9 => {
-                    self.ret();
-                    println!("RET");
-                    self.pc = self.pc - 1; // TODO CHECKME
-                }
-                0xCB => {
-                    self.pc += 1;
-                    let z80opcode = self.interconnect[self.pc];
-                    match z80opcode {
-                        0x7C => {
-                            let reg_h = self.reg_h;
-                            self.reg_h = self.bit_shift(7, reg_h);
-                            println!("BIT 7, H");
-                        }
-                        _ => panic!("unrecognized z80 opcode {:0>2X}", opcode)
-                    }
-                }
-                _ => panic!("unrecognized opcode {:0>2X}", opcode)
+            let instruction = self.fetch();
+            self.execute(instruction);
+            self.operations += 1;
+            if self.debug {
+                println!("{}: {}", self.operations, self);
             }
-
-            self.pc += 1;
-            self.operations = self.operations + 1;
-            println!("{}", self);
         }
-
     }
 
-    fn bit_shift(&mut self, amount: u8, reg: u8) -> u8 {
-        self.unset(FLAG_SUBTRACT);
-        self.set(FLAG_HALFCARRY);
-        reg >> amount
+    fn fetch(&mut self) -> (u8, u8) {
+        let opcode = self.interconnect[self.pc];
+        self.pc += 1;
+        if opcode == 0xCB {
+            self.pc += 1;
+            return (opcode, self.interconnect[self.pc])
+        }
+        (0, opcode)
     }
+
+    fn execute(&mut self, instruction: (u8, u8)) {
+        match instruction {
+            // z80prefix
+            (0xCB, opcode) => {
+                match opcode {
+                    0x7C => { &self.bit_7_h(); }
+                    _ => { panic!("unrecognized z80 opcode {:0>2X}", opcode) }
+                }
+            }
+            (_, opcode) => {
+                match opcode {
+                    0x00 => { &self.nop(); }
+                    0x20 => { &self.jr_nz_r8(); }
+                    0x21 => { &self.ld_hl_d16(); }
+                    0x31 => { &self.ld_sp_d16(); }
+                    0x32 => { &self.ldd_d16_a(); }
+                    0xAF => { &self.xor_a(); }
+                    0xC3 => { &self.jmp_a16(); }
+                    0xE0 => { &self.ldh_a8_a(); }
+                    0xE1 => { &self.pop_hl(); }
+                    0xC9 => { &self.ret(); }
+                    _ => panic!("unrecognized opcode {:0>2X}", opcode)
+                }
+            }
+        }
+    }
+
+    fn print_disassembly(&self, instruction: String, num_bytes: u16) {
+        let start = self.pc - 1;
+
+        let mut s = String::new();
+        for &byte in &self.interconnect[start..start + num_bytes as u16] {
+            write!(&mut s, "0x{:0X} ", byte).unwrap();
+        }
+        println!("[0x{:0>8X}] {:<15} {}", start, s, instruction)
+    }
+
+    // OPERATIONS START HERE
 
     fn ret(&mut self) {
         self.pc = self.sp;
-        self.sp = 0x0000; // TODO: what do we do with the stack pointer? put the return value?
-        self.sp = self.sp + 2; // move back "up"
+         // move back "up" the stack, zeroing out
+        self.sp += 1;
+        self.sp = 0x00;
+        self.sp += 1;
+        self.sp = 0x00;
     }
 
     /* when we jump to a new address, make sure to save the current program counter
      * address to the bottom of the stack, so when we can return to the current address
      */
-    fn jump(&mut self, address: u16) {
-        self.sp = self.sp - 2;
+    fn jmp_a16(&mut self) {
+        let address = self.read_word(self.pc + 1);
+        println!("JMP {:0>4X}", address);
+
         let address_high = (self.pc >> 0) as u8;
+        self.interconnect[self.sp] = address_high;
+        self.sp -= 1;
+
         let address_low  = (self.pc >> 8) as u8;
-        self.interconnect[self.sp + 0] = address_high;
-        self.interconnect[self.sp + 1] = address_low;
+        self.interconnect[self.sp] = address_low;
+        self.sp -= 1;
+
         self.pc = address;
+    }
+
+    fn ld_hl_d16(&mut self) {
+        self.reg_l = self.interconnect[self.pc+0];
+        self.reg_h = self.interconnect[self.pc+1];
+        self.print_disassembly(format!("LD HL,${:0>2X}{:0>2X}", self.reg_h, self.reg_l), 3);
+        self.pc += 2;
+    }
+
+    fn nop(&self) {
+        println!("NOP");
+    }
+
+    fn jr_nz_r8(&self) {
+        println!("JR NZ, r8");
+    }
+
+    fn bit_7_h(&mut self) {
+        self.unset(FLAG_SUBTRACT);
+        self.set(FLAG_HALFCARRY);
+        if self.reg_h < (1<<7) {
+            self.set(FLAG_ZERO);
+        }
+        self.reg_h >>= 7;
+    }
+
+    fn ld_sp_d16(&mut self) {
+        let address = self.read_word(self.pc);
+        self.print_disassembly(format!("LD SP,${:0>4X}", address), 3);
+        self.sp = address;
+        self.pc = self.pc + 2;
+    }
+
+    // load and decrement a into the address (HL)
+    fn ldd_d16_a(&mut self) {
+        self.print_disassembly(format!("LDD (HL), A"), 1);
+        let address = ((self.reg_h as u16) << 8) |
+                      ((self.reg_l as u16) << 0);
+        if self.reg_a == 0 {
+            self.set(FLAG_ZERO);
+            self.interconnect[address] = self.reg_a;
+        } else {
+            self.interconnect[address] = self.reg_a - 1;
+        }
+    }
+
+    // the docs say this zeros out $8000-$FFFE
+    // I am not sure if that means load 0 into $8000->self.reg_sp
+    // or actually xor $8000->self.reg_sp
+    // it should only take 4 clock cycles, and we are already are zero'd out
+    // so I think we are fine doing basically nothing
+    // TODO: figure out what this actually does.
+    fn xor_a(&self) {
+        self.print_disassembly(format!("XOR A"), 1);
+    }
+
+    fn ldh_a8_a(&mut self)  {
+        let offset = self.interconnect[self.pc + 1];
+        println!("LDH ({}), A", offset);
+
+        let address = 0xFF00 + offset as u16;
+        let value = self.interconnect[address];
+        self.reg_a = value;
+        self.pc = self.pc + 1;
+    }
+
+    fn pop_hl(&mut self) {
+        println!("POP HL");
+        self.sp = self.sp + 1;
+        self.reg_h = self.interconnect[self.sp];
+        self.interconnect[self.sp] = 0;
+        self.sp = self.sp + 1;
+        self.reg_l = self.interconnect[self.sp];
+        self.interconnect[self.sp] = 0;
     }
 }
 
