@@ -54,3 +54,28 @@ From page 18 of gb.pdf
     0xFF49 = 0xFF;
     0xFF4A = 0x00;
     0xFF4B = 0x00;
+
+# only 20 commands in DMG_ROM.BIN:
+
+Maybe there are 2-3 variants tops for each one...
+
+    1 POP
+    1 PUSH
+    1 SUB
+    2 CALL
+    2 DAA
+    2 RL
+    2 RLA
+    2 RRCA
+    2 XOR
+    3 BIT
+    3 RLCA
+    6 ADD
+    6 CP
+    7 LDH
+    13 DEC
+    31 RET
+    51 JR
+    63 INC
+    239 LD
+    1132 NOP
