@@ -200,18 +200,27 @@ impl Cpu {
 impl fmt::Display for Cpu {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         try!(writeln!(f,
-"cpu {{
-  pc: {pc:0>4X} [{i0:0>2X} {i1:0>2X} {i2:0>2X} {i3:0>2X}]
-  sp: {sp:0>4X}
-  registers: {{ a: {a:0>2X}, f: {f:0>2X}, b: {b:0>2X}, c: {c:0>2X}, d: {d:0>2X}, e: {e:0>2X}, h: {h:0>2X}, l: {l:0>2X} }}
-  flags: {{ zero: {zero}, sub: {sub}, half: {half}, carry: {carry} }}
-  instructions: {{}}
-}}",
-    pc=self.pc, i0=self.interconnect[self.pc+0], i1=self.interconnect[self.pc+1], i2=self.interconnect[self.pc+2], i3=self.interconnect[self.pc+3],
-    sp=self.sp,
-    a=self.reg_a, f=self.reg_f, b=self.reg_b, c=self.reg_c, d=self.reg_d, e=self.reg_e, h=self.reg_h, l=self.reg_l,
-    zero=self.flag_zero(), sub=self.flag_subtract(), half=self.flag_half_carry(), carry=self.flag_carry()));
+            "cpu {{\
+            \n\tpc: {pc:0>4X} [{i0:0>2X} {i1:0>2X} {i2:0>2X} {i3:0>2X}]\
+            \n\tsp: {sp:0>4X}\
+            \n\tregisters: {{ a: {a:0>2X}, f: {f:0>2X}, b: {b:0>2X}, c: {c:0>2X}, d: {d:0>2X}, e: {e:0>2X}, h: {h:0>2X}, l: {l:0>2X} }}\
+            \n\tflags: {{ zero: {zero}, sub: {sub}, half: {half}, carry: {carry} }}\
+            \n}}
+            ",
+                pc=self.pc, i0=self.interconnect[self.pc+0], i1=self.interconnect[self.pc+1], i2=self.interconnect[self.pc+2], i3=self.interconnect[self.pc+3],
+                sp=self.sp,
+                a=self.reg_a, f=self.reg_f, b=self.reg_b, c=self.reg_c, d=self.reg_d, e=self.reg_e, h=self.reg_h, l=self.reg_l,
+                zero=self.flag_zero(), sub=self.flag_subtract(), half=self.flag_halfcarry(), carry=self.flag_carry()));
 
-    self.print_stack_and_vram()
+        try!(writeln!(f, "mem {{\n  stack:\tvram:"));
+        for depth in 0..8 {
+            let byte = 0xFFFF - depth as u16;
+            let arrow = if self.sp == byte { "❯" } else { " " };
+
+            try!(writeln!(f, "{}   0x{:0>4X}: {:0>2X} \t  0x{:0>4X}: {:0>2X} \t\t",
+                arrow, byte, self.interconnect[byte], byte-0x6000, self.interconnect[byte-0x6000]
+            ));
+        }
+        writeln!(f, "}}")
     }
 }
