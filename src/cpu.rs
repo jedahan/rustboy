@@ -20,7 +20,7 @@ pub struct Cpu {
     reg_e: u8,
     reg_h: u8,
     reg_l: u8,
-    operations: u8,
+    operations: usize,
     debug: bool,
 
     interconnect: interconnect::Interconnect
@@ -87,7 +87,7 @@ impl Cpu {
             self.execute(instruction);
             self.operations += 1;
             if self.debug {
-                println!("{}: {}", self.operations, self);
+                println!("{:0>4X}: {}", self.operations, self);
             }
         }
     }
@@ -96,8 +96,9 @@ impl Cpu {
         let opcode = self.interconnect[self.pc];
         self.pc += 1;
         if opcode == 0xCB {
+            let z80opcode = self.interconnect[self.pc];
             self.pc += 1;
-            return (opcode, self.interconnect[self.pc])
+            return (opcode, z80opcode)
         }
         (0, opcode)
     }
@@ -114,10 +115,11 @@ impl Cpu {
             (_, opcode) => {
                 match opcode {
                     0x00 => { &self.nop(); }
-                    0x20 => { &self.jr_nz_r8(); }
+                    0x20 => { &self.jr_nz(); }
                     0x21 => { &self.ld_hl_d16(); }
                     0x31 => { &self.ld_sp_d16(); }
                     0x32 => { &self.ldd_d16_a(); }
+                    0x3E => { &self.ld_a_d8(); }
                     0xAF => { &self.xor_a(); }
                     0xC3 => { &self.jmp_a16(); }
                     0xE0 => { &self.ldh_a8_a(); }
@@ -136,7 +138,7 @@ impl Cpu {
         for &byte in &self.interconnect[start..start + num_bytes as u16] {
             write!(&mut s, "0x{:0X} ", byte).unwrap();
         }
-        println!("[0x{:0>8X}] {:<15} {}", start, s, instruction)
+        println!("[0x{:0>8X}] {:<15} {:<32} {:>16X}", start, s, instruction, self.operations)
     }
 
     // OPERATIONS START HERE
@@ -155,17 +157,8 @@ impl Cpu {
      */
     fn jmp_a16(&mut self) {
         let address = self.read_word(self.pc + 1);
-        println!("JMP {:0>4X}", address);
-
-        let address_high = (self.pc >> 0) as u8;
-        self.interconnect[self.sp] = address_high;
-        self.sp -= 1;
-
-        let address_low  = (self.pc >> 8) as u8;
-        self.interconnect[self.sp] = address_low;
-        self.sp -= 1;
-
-        self.pc = address;
+        self.print_disassembly(format!("JMP {:0>4X}", address), 3);
+        self.jmp(address);
     }
 
     fn ld_hl_d16(&mut self) {
@@ -175,21 +168,11 @@ impl Cpu {
         self.pc += 2;
     }
 
-    fn nop(&self) {
-        println!("NOP");
-    }
-
-    fn jr_nz_r8(&self) {
-        println!("JR NZ, r8");
-    }
-
-    fn bit_7_h(&mut self) {
-        self.unset(FLAG_SUBTRACT);
-        self.set(FLAG_HALFCARRY);
-        if self.reg_h < (1<<7) {
-            self.set(FLAG_ZERO);
-        }
-        self.reg_h >>= 7;
+    fn ld_a_d8(&mut self) {
+        let value = self.interconnect[self.pc];
+        self.print_disassembly(format!("LD A,${:0>2X}", value), 2);
+        self.reg_a = value;
+        self.pc += 1;
     }
 
     fn ld_sp_d16(&mut self) {
@@ -199,32 +182,64 @@ impl Cpu {
         self.pc = self.pc + 2;
     }
 
-    // load and decrement a into the address (HL)
+    // load a into the address (HL), then decrement hl
+    // TODO: check that we are using the zero flag correctly
     fn ldd_d16_a(&mut self) {
-        self.print_disassembly(format!("LDD (HL), A"), 1);
-        let address = ((self.reg_h as u16) << 8) |
+        self.print_disassembly(format!("LD (HL-), A"), 1);
+        let mut address = ((self.reg_h as u16) << 8) |
                       ((self.reg_l as u16) << 0);
-        if self.reg_a == 0 {
+        self.interconnect[address] = self.reg_a;
+
+        if address - 1 == 0x0000 {
             self.set(FLAG_ZERO);
-            self.interconnect[address] = self.reg_a;
         } else {
-            self.interconnect[address] = self.reg_a - 1;
+            address -= 1;
+        }
+        self.reg_l = (address >> 0) as u8;
+        self.reg_h = (address >> 8) as u8;
+    }
+
+    fn nop(&mut self) {
+        self.print_disassembly(format!("NOP"), 1);
+    }
+
+    fn jr_nz(&mut self) {
+        let zero = self.flag_zero();
+        let offset = self.interconnect[self.pc] as i8;
+        let address = self.pc.wrapping_add(offset as u16);
+        self.print_disassembly(format!("JR NZ, $+{:0>2X} ; 0x{:0>4X} ({})", offset, address, zero), 2);
+        if !zero {
+            self.jmp(address);
         }
     }
 
-    // the docs say this zeros out $8000-$FFFE
-    // I am not sure if that means load 0 into $8000->self.reg_sp
-    // or actually xor $8000->self.reg_sp
-    // it should only take 4 clock cycles, and we are already are zero'd out
-    // so I think we are fine doing basically nothing
-    // TODO: figure out what this actually does.
-    fn xor_a(&self) {
+    fn jmp(&mut self, address: u16) {
+        self.pc = address;
+        self.pc += 1;
+    }
+
+    fn bit_7_h(&mut self) {
+        self.unset(FLAG_SUBTRACT);
+        self.set(FLAG_HALFCARRY);
+
+        if self.reg_h >> 7 == 1 {
+            self.unset(FLAG_ZERO);
+        } else {
+            self.set(FLAG_ZERO)
+        }
+
+        self.print_disassembly(format!("BIT 7, H"), 1);
+    }
+
+    // Thank you https://realboyemulator.wordpress.com/2013/01/03/a-look-at-the-game-boy-bootstrap-let-the-fun-begin/comment-page-1/
+    fn xor_a(&mut self) {
         self.print_disassembly(format!("XOR A"), 1);
+        self.reg_a ^= self.reg_a;
     }
 
     fn ldh_a8_a(&mut self)  {
         let offset = self.interconnect[self.pc + 1];
-        println!("LDH ({}), A", offset);
+        self.print_disassembly(format!("LDH ({}), A", offset), 2);
 
         let address = 0xFF00 + offset as u16;
         let value = self.interconnect[address];
