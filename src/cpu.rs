@@ -27,6 +27,11 @@ pub struct Cpu {
 }
 
 impl Cpu {
+    fn crash(&self, message: String) {
+        println!("{:0>4X}: {}", self.operations, self);
+        panic!(message);
+    }
+
     pub fn new(interconnect: interconnect::Interconnect) -> Cpu {
         let debug = match env::var("DEBUG") {
             Ok(_) => true,
@@ -109,7 +114,7 @@ impl Cpu {
             (0xCB, opcode) => {
                 match opcode {
                     0x7C => { &self.bit_7_h(); }
-                    _ => { panic!("unrecognized z80 opcode {:0>2X}", opcode) }
+                    _ => { self.crash(format!("unrecognized z80 opcode {:0>2X}", opcode)) }
                 }
             }
             (_, opcode) => {
@@ -125,7 +130,7 @@ impl Cpu {
                     0xE0 => { &self.ldh_a8_a(); }
                     0xE1 => { &self.pop_hl(); }
                     0xC9 => { &self.ret(); }
-                    _ => panic!("unrecognized opcode {:0>2X}", opcode)
+                    _ => self.crash(format!("unrecognized opcode {:0>2X}", opcode))
                 }
             }
         }
@@ -204,18 +209,18 @@ impl Cpu {
     }
 
     fn jr_nz(&mut self) {
-        let zero = self.flag_zero();
-        let offset = self.interconnect[self.pc] as i8;
-        let address = self.pc.wrapping_add(offset as u16);
-        self.print_disassembly(format!("JR NZ, $+{:0>2X} ; 0x{:0>4X} ({})", offset, address, zero), 2);
-        if !zero {
+        if self.flag_zero() {
+            self.pc += 1;
+        } else {
+            let offset = self.interconnect[self.pc] as i8;
+            let address = self.pc.wrapping_add((offset + 1) as u16);
+            self.print_disassembly(format!("JR NZ, $+{:0>2X} ; 0x{:0>4X}", offset, address), 2);
             self.jmp(address);
         }
     }
 
     fn jmp(&mut self, address: u16) {
         self.pc = address;
-        self.pc += 1;
     }
 
     fn bit_7_h(&mut self) {
