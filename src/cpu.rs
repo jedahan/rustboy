@@ -104,22 +104,32 @@ impl Cpu {
             (0xCB, opcode) => {
                 match opcode {
                     0x7C => { self.bit_h(7) }
+                    0x11 => { self.rl_c() }
                     _ => { self.crash(format!("unrecognized z80 opcode {:0>2X}", opcode)); unreachable!() }
                 }
             }
             (_, opcode) => {
                 match opcode {
                     0x00 => { self.nop() }
+                    0x06 => { self.ld_b_d8() }
+                    0x0C => { self.inc_c() }
                     0x0E => { self.ldd_c_d8() }
+                    0x11 => { self.ld_de_d16() }
+                    0x1A => { self.ld_a_de() }
                     0x20 => { self.jr_nz() }
                     0x21 => { self.ld_hl_d16() }
                     0x31 => { self.ld_sp_d16() }
                     0x32 => { self.ldd_d16_a() }
                     0x3E => { self.ldd_a_d8() }
+                    0x4F => { self.ld_c_a() }
+                    0x77 => { self.ld_hl_a() }
                     0xAF => { self.xor_a() }
                     0xC3 => { self.jmp_a16() }
+                    0xC5 => { self.push_bc() }
+                    0xCD => { self.call() }
                     0xE0 => { self.ldh_a8_a() }
                     0xE1 => { self.pop_hl() }
+                    0xE2 => { self.load_relative_c_a() }
                     0xC9 => { self.ret() }
                     _ => { self.crash(format!("unrecognized opcode {:0>2X}", opcode)); unreachable!() }
                 }
@@ -131,10 +141,96 @@ impl Cpu {
     pub fn set(&mut self, flag: Flag) { self.reg_f |= flag.to_u8(); }
     pub fn unset(&mut self, flag: Flag) { self.reg_f &= ! flag.to_u8(); }
 
+    fn rl_c(&mut self) -> u16 {
+        let size = 2;
+        let amount = self.memory[self.pc + 1];
+        self.print_disassembly(format!("RL C ({})", amount), size);
+        self.reg_c.rotate_left(amount as u32);
+        size
+    }
+
+    fn push_bc(&mut self) -> u16 {
+        let size = 1;
+        self.print_disassembly(format!("PUSH BC ${:0>2X}{:0>2X}", self.reg_b, self.reg_c), size);
+        self.sp -= 1;
+        self.memory[self.sp] = self.reg_b;
+        self.sp -= 1;
+        self.memory[self.sp] = self.reg_c;
+        size
+    }
+
+    fn ld_b_d8(&mut self) -> u16 {
+        let size = 2;
+        let value = self.memory[self.pc + 1];
+        self.print_disassembly(format!("LD B, 0x{:0>2X}", value), size);
+        self.reg_b = value;
+        size
+    }
+
+    fn ld_c_a(&mut self) -> u16 {
+        let size = 1;
+        self.print_disassembly(format!("LD C, A"), size);
+        self.reg_c = self.reg_a;
+        size
+    }
+
+    fn call(&mut self) -> u16 {
+        let size = 3;
+        let address = self.read_word(self.pc + 1);
+        self.print_disassembly(format!("CALL ${:0>4X}", address), size);
+
+        self.sp -= 1;
+        self.memory[self.sp] = (self.pc >> 8) as u8 & 0xFF;
+        self.sp -= 1;
+        self.memory[self.pc] = (self.pc >> 0) as u8 & 0xFF;
+
+        self.pc = address;
+        0
+    }
+
+    fn ld_a_de(&mut self) -> u16 {
+        let size = 1;
+        let address = self.de();
+        self.print_disassembly(format!("LD A,${:0>4X}", address), size);
+        self.reg_a = self.memory[address];
+        size
+    }
+
+    fn ld_de_d16(&mut self) -> u16 {
+        let size = 3;
+        self.reg_d = self.memory[self.pc + 2];
+        self.reg_e = self.memory[self.pc + 1];
+        self.print_disassembly(format!("LD DE,${:0>2X}{:0>2X}", self.reg_d, self.reg_e), size);
+        size
+    }
+
+    fn ld_hl_a(&mut self) -> u16 {
+        let size = 1;
+        let address = self.hl();
+        self.print_disassembly(format!("LD 0x{:0>4X}, A", address), size);
+        self.memory[address] = self.reg_a;
+        size
+    }
+
+    fn inc_c(&mut self) -> u16 {
+        let size = 1;
+        self.print_disassembly(format!("INC C"), size);
+        self.reg_c = self.reg_c.wrapping_add(1);
+        size
+    }
+
+    fn load_relative_c_a(&mut self) -> u16 {
+        let size = 1;
+        let value = 0xFF00 + self.reg_c as u16;
+        self.print_disassembly(format!("LD +${:0>2X}, {:0>2X}", self.reg_c, self.reg_a), size);
+        self.memory[value] = self.reg_a;
+        size
+    }
+
     fn ldd_a_d8(&mut self) -> u16 {
         let size = 2;
         let value = self.memory[self.pc + 1];
-        self.print_disassembly(format!("LD C,${:0>2X}", value), size);
+        self.print_disassembly(format!("LD A,${:0>2X}", value), size);
         self.reg_a = value;
         size
     }
@@ -150,7 +246,7 @@ impl Cpu {
     fn print_disassembly(&self, instruction: String, num_bytes: u16) {
         let mut s = String::new();
         for &byte in &self.memory[self.pc..self.pc + num_bytes] {
-            write!(&mut s, "0x{:0X} ", byte).unwrap();
+            write!(&mut s, "0x{:0>2X} ", byte).unwrap();
         }
         println!("[0x{:0>8X}] {:<15} {:<32} {:>16X}", self.pc, s, instruction, self.operations)
     }
@@ -193,9 +289,14 @@ impl Cpu {
         size
     }
 
+    fn de(&self) -> u16 {
+        ((self.reg_d as u16) << 8) + ((self.reg_e as u16) << 0)
+    }
+
     fn hl(&self) -> u16 {
         ((self.reg_h as u16) << 8) + ((self.reg_l as u16) << 0)
     }
+
 
     // load reg into the address (HL), then decrement hl
     // TODO: check that we are using the zero flag correctly
@@ -261,7 +362,7 @@ impl Cpu {
     fn ldh_a8_a(&mut self) -> u16{
         let size = 2;
         let offset = self.memory[self.pc + 1];
-        self.print_disassembly(format!("LDH ({}), A", offset), size);
+        self.print_disassembly(format!("LDH (${:0>2X}), A", offset), size);
 
         let address = 0xFF00 + offset as u16;
         let value = self.memory[address];
