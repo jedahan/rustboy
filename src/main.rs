@@ -1,6 +1,6 @@
 mod gameboy;
 mod cpu;
-mod interconnect;
+mod memory;
 mod cart;
 mod header;
 

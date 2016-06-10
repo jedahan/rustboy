@@ -8,7 +8,7 @@ const IO_SIZE: usize = 0xFF7F - 0xFF01;
 
 use std::ops::{Index, IndexMut, Range};
 
-pub struct Interconnect {
+pub struct Memory {
     boot: [u8; gameboy::BOOTROM_SIZE],
     cart: cart::Cart,
     wram: [u8; RAM_SIZE],
@@ -20,9 +20,9 @@ pub struct Interconnect {
     interrupt: [u8; 1]
 }
 
-impl Interconnect {
-    pub fn new(boot: [u8; gameboy::BOOTROM_SIZE], cart: cart::Cart) -> Interconnect {
-        Interconnect {
+impl Memory {
+    pub fn new(boot: [u8; gameboy::BOOTROM_SIZE], cart: cart::Cart) -> Memory {
+        Memory {
             boot: boot,
             cart: cart,
             wram: [0; RAM_SIZE],
@@ -36,7 +36,7 @@ impl Interconnect {
     }
 }
 
-impl Index<u16> for Interconnect {
+impl Index<u16> for Memory {
     type Output = u8;
 
     fn index(&self, index: u16) -> &Self::Output {
@@ -48,7 +48,7 @@ impl Index<u16> for Interconnect {
     }
 }
 
-impl Index<usize> for Interconnect {
+impl Index<usize> for Memory {
     type Output = u8;
 
     fn index(&self, index: usize) -> &Self::Output {
@@ -56,13 +56,13 @@ impl Index<usize> for Interconnect {
     }
 }
 
-impl IndexMut<u16> for Interconnect {
+impl IndexMut<u16> for Memory {
     fn index_mut(&mut self, index: u16) -> &mut u8 {
         &mut self[index as usize]
     }
 }
 
-impl IndexMut<usize> for Interconnect {
+impl IndexMut<usize> for Memory {
     fn index_mut(&mut self, index: usize) -> &mut u8 {
         match index {
             0x0000...0x00FF => &mut self.boot[index - 0x0000],
@@ -80,7 +80,7 @@ impl IndexMut<usize> for Interconnect {
     }
 }
 
-impl Index<Range<u16>> for Interconnect {
+impl Index<Range<u16>> for Memory {
     type Output = [u8];
     fn index(&self, range: Range<u16>) -> &Self::Output {
         let usize_range = (range.start as usize)..(range.end as usize);
@@ -88,7 +88,7 @@ impl Index<Range<u16>> for Interconnect {
     }
 }
 
-impl Index<Range<usize>> for Interconnect {
+impl Index<Range<usize>> for Memory {
     type Output = [u8];
     fn index(&self, range: Range<usize>) -> &Self::Output {
         let end = if range.end-range.start == 1 {

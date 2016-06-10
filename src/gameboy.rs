@@ -2,7 +2,7 @@ use std::fmt;
 
 use cpu;
 use cart;
-use interconnect;
+use memory;
 
 pub const BOOTROM_SIZE: usize = 256;
 
@@ -12,9 +12,9 @@ pub struct GameBoy {
 
 impl GameBoy {
     pub fn new(boot: [u8; BOOTROM_SIZE], cart: cart::Cart) -> GameBoy {
-        let interconnect = interconnect::Interconnect::new(boot, cart);
+        let memory = memory::Memory::new(boot, cart);
         GameBoy {
-            cpu: cpu::Cpu::new(interconnect)
+            cpu: cpu::Cpu::new(memory)
         }
     }
     pub fn run(&mut self) {
