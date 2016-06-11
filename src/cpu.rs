@@ -4,6 +4,7 @@ use screen;
 use memory;
 use std::fmt::Write;
 use std::env;
+use std::time::{Duration, Instant};
 
 pub enum Flag {ZERO, SUBTRACT, HALFCARRY, CARRY}
 
@@ -96,14 +97,19 @@ impl Cpu {
     }
 
     pub fn run(&mut self) {
+        let frame_duration = Duration::new(0, 16);
+        let mut previous_draw = Instant::now();
+
         println!("rustboy is running");
         loop {
             let instruction = self.fetch();
             let advance = self.execute(instruction);
             self.pc += advance;
             self.operations += 1;
-            if self.operations % 100 == 0 {
+            let now = Instant::now();
+            if now - previous_draw > frame_duration {
                 self.screen.draw(&self.memory);
+                previous_draw = now;
             }
 
             if self.debug {

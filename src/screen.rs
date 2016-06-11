@@ -3,9 +3,6 @@ extern crate minifb;
 use self::minifb::{WindowOptions, Key, MouseMode};
 use memory;
 
-use std::time::Duration;
-use std::thread::sleep;
-
 pub struct Screen {
     window: minifb::Window,
     buffer: Vec<u32>
@@ -34,8 +31,6 @@ impl Screen {
                 let offset = ((mouse.1 as usize) * self.window.get_size().0) as u16 + mouse.0 as u16;
                 println!("{:0>4X}: {:0>2X}", offset, memory[offset] );
             });
-
-            sleep(Duration::new(1, 0));
         }
     }
 
