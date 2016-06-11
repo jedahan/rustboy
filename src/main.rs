@@ -1,3 +1,6 @@
+#![feature(alloc_system)]
+extern crate alloc_system;
+
 mod gameboy;
 mod cpu;
 mod memory;

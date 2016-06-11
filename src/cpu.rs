@@ -97,7 +97,7 @@ impl Cpu {
     }
 
     pub fn run(&mut self) {
-        let frame_duration = Duration::new(0, 16);
+        let frame_duration = Duration::from_millis(16);
         let mut previous_draw = Instant::now();
 
         println!("rustboy is running");

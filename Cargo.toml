@@ -5,3 +5,6 @@ authors = ["Jonathan Dahan <jonathan@jonathan.is>"]
 
 [dependencies]
 minifb = "0.7.1"
+
+[profile.release]
+debug = true
