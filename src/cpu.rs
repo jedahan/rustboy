@@ -1,5 +1,6 @@
 use std::fmt;
 
+use screen;
 use memory;
 use std::fmt::Write;
 use std::env;
@@ -22,17 +23,34 @@ pub struct Cpu {
     reg_h: u8,
     reg_l: u8,
     memory: memory::Memory,
+    screen: screen::Screen,
     operations: usize,
     debug: bool,
 }
 
 impl Cpu {
+
+    fn print_stack_and_vram(&self, height: usize) {
+        println!("mem {{\n  stack:\tvram:");
+        for depth in 0..height {
+            let byte = 0xFFFF - depth as u16;
+            let arrow = if self.sp == byte { "❯" } else { " " };
+
+            println!("{}   0x{:0>4X}: {:0>2X} \t  0x{:0>4X}: {:0>2X} \t\t",
+                arrow, byte, self.memory[byte], byte-0x6000, self.memory[byte-0x6000]
+            )
+        }
+        println!("}}");
+
+    }
+
     fn crash(&self, message: String) {
         println!("{:0>4X}: {}", self.operations, self);
+        self.print_stack_and_vram(0xFF);
         panic!(message);
     }
 
-    pub fn new(memory: memory::Memory) -> Cpu {
+    pub fn new(memory: memory::Memory, screen: screen::Screen) -> Cpu {
         let debug = match env::var("DEBUG") {
             Ok(_) => true,
             _ => false
@@ -48,6 +66,8 @@ impl Cpu {
             reg_e: 0,
             reg_h: 0,
             reg_l: 0,
+
+            screen: screen,
 
             operations: 0,
             debug: debug,
@@ -82,6 +102,10 @@ impl Cpu {
             let advance = self.execute(instruction);
             self.pc += advance;
             self.operations += 1;
+            if self.operations % 100 == 0 {
+                self.screen.draw(&self.memory);
+            }
+
             if self.debug {
                 println!("{:0>4X}: {}", self.operations, self);
             }
@@ -131,7 +155,11 @@ impl Cpu {
                     0xE1 => { self.pop_hl() }
                     0xE2 => { self.load_relative_c_a() }
                     0xC9 => { self.ret() }
-                    _ => { self.crash(format!("unrecognized opcode {:0>2X}", opcode)); unreachable!() }
+                    _ => {
+                        self.screen.debug(& self.memory);
+                        0
+                        //self.crash(format!("unrecognized opcode {:0>2X}", opcode))
+                    }
                 }
             }
         }
@@ -400,15 +428,7 @@ impl fmt::Display for Cpu {
 
         ));
 
-        try!(writeln!(f, "mem {{\n  stack:\tvram:"));
-        for depth in 0..8 {
-            let byte = 0xFFFF - depth as u16;
-            let arrow = if self.sp == byte { "❯" } else { " " };
-
-            try!(writeln!(f, "{}   0x{:0>4X}: {:0>2X} \t  0x{:0>4X}: {:0>2X} \t\t",
-                arrow, byte, self.memory[byte], byte-0x6000, self.memory[byte-0x6000]
-            ));
-        }
-        writeln!(f, "}}")
+        self.print_stack_and_vram(8);
+        Ok(())
     }
 }

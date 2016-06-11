@@ -4,3 +4,4 @@ version = "0.1.0"
 authors = ["Jonathan Dahan <jonathan@jonathan.is>"]
 
 [dependencies]
+minifb = "0.7.1"

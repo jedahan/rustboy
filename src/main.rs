@@ -3,6 +3,7 @@ mod cpu;
 mod memory;
 mod cart;
 mod header;
+mod screen;
 
 use std::env;
 use std::fs;
