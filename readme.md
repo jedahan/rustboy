@@ -47,6 +47,6 @@ It should only show 1 passing test - if you want to see that it is testing your 
 
 To run a game
 
-    cargo run -- DMG_ROM.bin roms/Super\ Mario\ Land\ \(World\).gb
+    cargo run -- DMG_ROM.bin roms/Tetris\ \(World\).gb
 
 Note, this requires the game boy boot rom, which I cannot distribute. You can google for it though.

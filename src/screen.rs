@@ -6,6 +6,7 @@ use memory;
 
 pub struct Screen {
     window: minifb::Window,
+    scroll: u16,
     buffer: Vec<u32>
 }
 
@@ -13,6 +14,7 @@ impl Screen {
     pub fn new(width: usize, height: usize) -> Screen {
         Screen {
             buffer: vec![0; width*height],
+            scroll: 0xFFFF,
             window: minifb::Window::new(
                 "rustboy",
                 width,
@@ -36,9 +38,17 @@ impl Screen {
             if now - previous_draw > frame_duration {
                 self.draw(memory);
 
+                self.window.get_scroll_wheel().map(|scroll| {
+                    let width = self.window.get_size().0 as u16 / 4;
+                    self.scroll = self.scroll.wrapping_sub(width * scroll.1 as u16);
+                });
+
                 self.window.get_mouse_pos(MouseMode::Clamp).map(|mouse|{
-                    let offset = ((mouse.1 as usize) * self.window.get_size().0) as u16 + mouse.0 as u16;
-                    println!("{:0>4X}: {:0>2X}", offset, memory[offset] );
+                    let width = self.window.get_size().0 as u16 / 4;
+                    let x = mouse.0 as u16;
+                    let y = mouse.1 as u16;
+                    let offset = self.scroll - (y * width + x);
+                    println!("0x{:0>4X}: {:0>4X}: {:0>2X}", self.scroll, offset, memory[offset] );
                 });
                 previous_draw = now;
             }
@@ -46,7 +56,7 @@ impl Screen {
     }
 
     pub fn draw(&mut self, buffer: & memory::Memory) {
-        let mut count: u16 = 0x9FFF;
+        let mut count: u16 = self.scroll;
         for i in self.buffer.iter_mut() {
             let gray = buffer[count] as u32;
             *i = gray << 16 | gray << 8 | gray;
