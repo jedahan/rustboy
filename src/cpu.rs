@@ -106,13 +106,13 @@ impl Cpu {
             let advance = self.execute(instruction);
             self.pc += advance;
             self.operations += 1;
-            let now = Instant::now();
-            if now - previous_draw > frame_duration {
-                self.screen.draw(&self.memory);
-                previous_draw = now;
-            }
 
             if self.debug {
+                let now = Instant::now();
+                if now - previous_draw > frame_duration {
+                    self.screen.draw(&self.memory);
+                    previous_draw = now;
+                }
                 println!("{:0>4X}: {}", self.operations, self);
             }
         }
@@ -162,7 +162,7 @@ impl Cpu {
                     0xE2 => { self.load_relative_c_a() }
                     0xC9 => { self.ret() }
                     _ => {
-                        self.screen.debug(& self.memory);
+                        self.screen.debug(&self.memory);
                         0
                         //self.crash(format!("unrecognized opcode {:0>2X}", opcode))
                     }

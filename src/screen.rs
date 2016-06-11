@@ -1,5 +1,6 @@
 extern crate minifb;
 
+use std::time::{Duration, Instant};
 use self::minifb::{WindowOptions, Key, MouseMode};
 use memory;
 
@@ -25,12 +26,22 @@ impl Screen {
         }
     }
 
-    pub fn debug(&self, memory: & memory::Memory) {
+    pub fn debug(&mut self, memory: & memory::Memory) {
+        let frame_duration = Duration::from_millis(16);
+        let mut previous_draw = Instant::now();
+
+        self.draw(memory);
         while self.window.is_open() && !self.window.is_key_down(Key::Escape) {
-            self.window.get_mouse_pos(MouseMode::Clamp).map(|mouse|{
-                let offset = ((mouse.1 as usize) * self.window.get_size().0) as u16 + mouse.0 as u16;
-                println!("{:0>4X}: {:0>2X}", offset, memory[offset] );
-            });
+            let now = Instant::now();
+            if now - previous_draw > frame_duration {
+                self.draw(memory);
+
+                self.window.get_mouse_pos(MouseMode::Clamp).map(|mouse|{
+                    let offset = ((mouse.1 as usize) * self.window.get_size().0) as u16 + mouse.0 as u16;
+                    println!("{:0>4X}: {:0>2X}", offset, memory[offset] );
+                });
+                previous_draw = now;
+            }
         }
     }
 
