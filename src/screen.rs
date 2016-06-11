@@ -40,7 +40,7 @@ impl Screen {
     }
 
     pub fn draw(&mut self, buffer: & memory::Memory) {
-        let mut count: u16 = 0xFFFF;
+        let mut count: u16 = 0x9FFF;
         for i in self.buffer.iter_mut() {
             let gray = buffer[count] as u32;
             *i = gray << 16 | gray << 8 | gray;
