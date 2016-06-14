@@ -2,7 +2,7 @@
 name = "rustboy"
 version = "0.1.0"
 dependencies = [
- "minifb 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "minifb 0.7.1 (git+https://github.com/jedahan/rust_minifb.git)",
 ]
 
 [[package]]
@@ -57,7 +57,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "minifb"
 version = "0.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
+source = "git+https://github.com/jedahan/rust_minifb.git#77e0e20ba9558c32b5aa3b84b34e4114b32700e1"
 dependencies = [
  "gcc 0.3.28 (registry+https://github.com/rust-lang/crates.io-index)",
  "gdi32-sys 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",

@@ -48,8 +48,10 @@ impl Screen {
                     let x = mouse.0 as u16;
                     let y = mouse.1 as u16;
                     let offset = self.scroll - (y * width + x);
-                    println!("0x{:0>4X}: {:0>4X}: {:0>2X}", self.scroll, offset, memory[offset] );
+                    let s = format!("0x{:0>4X}: {:0>4X}: {:0>2X}", self.scroll, offset, memory[offset] );
+                    self.window.update_title(&s);
                 });
+
                 previous_draw = now;
             }
         }
