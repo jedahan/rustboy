@@ -4,6 +4,15 @@ A game boy emulator, written in rust!
 
 Inspired by [Ferris Makes Emulators](https://www.youtube.com/playlist?list=PL-sXmdrqqYYcznDg4xwAJWQgNL2gRray2)
 
+
+# building and running
+
+Right now, the only build requirement is [rust](rust-lang.org)
+
+To run the emulator, I am using a dumped boot rom with sha1 sum of `4ed31ec6b0b175bb109c0eb5fd3d193da823339f`
+
+    cargo run --release -- DMG_ROM.bin roms/test.gb
+
 # thanks
 
 - to [Dissecting the Game Boy](https://www.youtube.com/watch?v=ecTQVa42sJc) for an accessible visual overview
