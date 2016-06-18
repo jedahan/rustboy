@@ -95,7 +95,7 @@ impl Index<Range<u16>> for Memory {
 impl Index<Range<usize>> for Memory {
     type Output = [u8];
     fn index(&self, range: Range<usize>) -> &Self::Output {
-        let end = if range.end-range.start == 1 {
+        let end = if range.end.wrapping_sub(range.start) == 1 {
             range.start
         } else {
             range.end
@@ -112,8 +112,8 @@ impl Index<Range<usize>> for Memory {
             (0xFF00, 0xFF00) => &self.input[..],
             (0xFF01...0xFF7F, 0xFF01...0xFF7F) => &self.io[(range.start - 0xFF01)..(range.end - 0xFF01)],
             (0xFF80...0xFFFF, 0xFF80...0xFFFE) => &self.hram[(range.start - 0xFF80)..(range.end - 0xFF80)],
-            (0xFFFF, 0xFFFF) => &self.interrupt[..],
-            _ => panic!("Address {:0>4X}..{:0>4X} has no known mapping!", range.start, range.end)
+            (0xFFFF, 0x0000) => &self.interrupt[..],
+            _ => panic!("Address {:0>4X}..{:0>4X} has no known mapping!", range.start, end)
         }
     }
 }

@@ -141,19 +141,25 @@ impl Cpu {
             (_, opcode) => {
                 match opcode {
                     0x00 => { self.nop() }
+                    0x05 => { self.dec_b() }
                     0x06 => { self.ld_b_d8() }
                     0x0C => { self.inc_c() }
                     0x0E => { self.ldd_c_d8() }
                     0x11 => { self.ld_de_d16() }
+                    0x17 => { self.rla() }
                     0x1A => { self.ld_a_de() }
-                    0x20 => { self.jr_nz() }
+                    0x20 => { self.jr(Flag::ZERO, false) }
                     0x21 => { self.ld_hl_d16() }
+                    0x22 => { self.ldi_hl_a() }
+                    0x23 => { self.inc_hl() }
+                    0x28 => { self.jr(Flag::ZERO, true) }
                     0x31 => { self.ld_sp_d16() }
-                    0x32 => { self.ldd_d16_a() }
+                    0x32 => { self.ldd_hl_a() }
                     0x3E => { self.ldd_a_d8() }
                     0x4F => { self.ld_c_a() }
                     0x77 => { self.ld_hl_a() }
                     0xAF => { self.xor_a() }
+                    0xC1 => { self.pop_bc() }
                     0xC3 => { self.jmp_a16() }
                     0xC5 => { self.push_bc() }
                     0xCD => { self.call() }
@@ -162,9 +168,9 @@ impl Cpu {
                     0xE2 => { self.load_relative_c_a() }
                     0xC9 => { self.ret() }
                     _ => {
+                        println!("unrecognized opcode {:0>2X}", opcode);
                         self.screen.debug(&self.memory);
                         0
-                        //self.crash(format!("unrecognized opcode {:0>2X}", opcode))
                     }
                 }
             }
@@ -175,8 +181,19 @@ impl Cpu {
     pub fn set(&mut self, flag: Flag) { self.reg_f |= flag.to_u8(); }
     pub fn unset(&mut self, flag: Flag) { self.reg_f &= ! flag.to_u8(); }
 
+    fn rla(&mut self) -> u16 {
+        let size = 1;
+        let amount = self.memory[self.pc + 1];
+        self.print_disassembly(format!("RLA ({})", amount), size);
+        if self.reg_a & 0b10000000 != 0 {
+            self.set(Flag::CARRY)
+        }
+        self.reg_a <<= amount as u32;
+        size
+    }
+
     fn rl_c(&mut self) -> u16 {
-        let size = 2;
+        let size = 1;
         let amount = self.memory[self.pc + 1];
         self.print_disassembly(format!("RL C ({})", amount), size);
         self.reg_c.rotate_left(amount as u32);
@@ -211,12 +228,20 @@ impl Cpu {
     fn call(&mut self) -> u16 {
         let size = 3;
         let address = self.read_word(self.pc + 1);
-        self.print_disassembly(format!("CALL ${:0>4X}", address), size);
+        let return_address = self.pc + size;
 
+        let return_address_high = (return_address >> 8) as u8 & 0xFF;
+        let return_address_low = (return_address >> 0) as u8 & 0xFF;
+
+        self.print_disassembly(format!(
+            "CALL ${:0>4X} (from {:0>2X}{:0>2X})",
+            address, return_address_high, return_address_low
+        ), size);
+
+        self.memory[self.sp] = return_address_low;
         self.sp -= 1;
-        self.memory[self.sp] = (self.pc >> 8) as u8 & 0xFF;
+        self.memory[self.sp] = return_address_high;
         self.sp -= 1;
-        self.memory[self.pc] = (self.pc >> 0) as u8 & 0xFF;
 
         self.pc = address;
         0
@@ -288,12 +313,19 @@ impl Cpu {
     // OPERATIONS START HERE
 
     fn ret(&mut self) -> u16 {
-        self.pc = self.sp;
+        let addr_h = self.memory[self.sp+1];
+        let addr_l = self.memory[self.sp+2];
+        let return_address = (addr_h as u16) << 8 | addr_l as u16;
+        self.print_disassembly(format!("RET ({:0>4X})", return_address), 1);
+
+        self.pc = return_address;
+
          // move back "up" the stack, zeroing out
         self.sp += 1;
         self.sp = 0x00;
         self.sp += 1;
         self.sp = 0x00;
+
         0
     }
 
@@ -331,23 +363,28 @@ impl Cpu {
         ((self.reg_h as u16) << 8) + ((self.reg_l as u16) << 0)
     }
 
+    fn ldi_hl_a(&mut self) -> u16 {
+        let size = 1;
+        self.print_disassembly(format!("LD (HL+) ({:0>2X}{:0>2X}), {:?}", self.reg_h, self.reg_l, self.reg_a), size);
+        let address = self.hl();
+        self.memory[address] = self.reg_a;
+        self.store_hl(address.wrapping_add(1));
+        size
+    }
 
-    // load reg into the address (HL), then decrement hl
-    // TODO: check that we are using the zero flag correctly
-    fn ldd_d16_a(&mut self) -> u16 {
+    fn store_hl(&mut self, address: u16) {
+        self.reg_l = (address >> 0) as u8;
+        self.reg_h = (address >> 8) as u8;
+    }
+
+    fn ldd_hl_a(&mut self) -> u16 {
         let size = 1;
         self.print_disassembly(format!("LD (HL-) ({:0>2X}{:0>2X}), {:?}", self.reg_h, self.reg_l, self.reg_a), size);
 
-        let mut address = self.hl();
+        let address = self.hl();
         self.memory[address] = self.reg_a;
 
-        if address - 1 == 0x0000 {
-            self.set(Flag::ZERO);
-        } else {
-            address -= 1;
-        }
-        self.reg_l = (address >> 0) as u8;
-        self.reg_h = (address >> 8) as u8;
+        self.store_hl(address.wrapping_sub(1));
         size
     }
 
@@ -357,15 +394,14 @@ impl Cpu {
         size
     }
 
-    fn jr_nz(&mut self) -> u16 {
+    fn jr(&mut self, flag: Flag, zero: bool) -> u16 {
         let size = 2;
-        if ! self.get(Flag::ZERO) {
-            let offset = self.memory[self.pc + 1] as i8;
-            let address = self.pc.wrapping_add(offset as u16);
-            self.print_disassembly(format!("JR NZ, $+{:0>2X} ; 0x{:0>4X}", offset, address + 1), size);
-            self.pc = address;
+        let offset = self.memory[self.pc + 1] as i8;
+        let address = self.pc.wrapping_add(offset as u16);
+        self.print_disassembly(format!("JR NZ, $+{:0>2X} ; 0x{:0>4X}", offset, address + 1), size);
 
-            return 2
+        if self.get(flag) == zero {
+            self.pc = address;
         }
         size
     }
@@ -405,15 +441,51 @@ impl Cpu {
         size
     }
 
+    fn pop_bc(&mut self) -> u16 {
+        let size = 1;
+        self.print_disassembly(format!("POP BC"), size);
+        self.sp += 1;
+        self.reg_b = self.memory[self.sp];
+        self.memory[self.sp] = 0;
+
+        self.sp += 1;
+        self.reg_c = self.memory[self.sp];
+        self.memory[self.sp] = 0;
+        size
+    }
+
     fn pop_hl(&mut self) -> u16 {
-        println!("POP HL");
+        let size = 1;
+        self.print_disassembly(format!("POP HL"), size);
         self.sp = self.sp + 1;
         self.reg_h = self.memory[self.sp];
         self.memory[self.sp] = 0;
         self.sp = self.sp + 1;
         self.reg_l = self.memory[self.sp];
         self.memory[self.sp] = 0;
-        1
+        size
+    }
+
+    fn dec_b(&mut self) -> u16 {
+        let size = 1;
+        self.print_disassembly(format!("DEC B"), size);
+        if self.reg_b == 0 {
+            self.set(Flag::HALFCARRY);
+        }
+        self.reg_b.wrapping_sub(1);
+        if self.reg_b == 0 {
+            self.set(Flag::ZERO);
+        }
+        self.set(Flag::SUBTRACT);
+        size
+    }
+
+    fn inc_hl(&mut self) -> u16 {
+        let size = 1;
+        self.print_disassembly(format!("INC HL"), size);
+        let value = self.hl();
+        self.store_hl(value.wrapping_add(1));
+        size
     }
 }
 
