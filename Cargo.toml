@@ -5,6 +5,7 @@ authors = ["Jonathan Dahan <jonathan@jonathan.is>"]
 
 [dependencies]
 minifb = { git = "https://github.com/jedahan/rust_minifb.git" }
+unborrow = "0.1.0"
 
 [profile.release]
 debug = true

@@ -141,35 +141,131 @@ impl Cpu {
             (_, opcode) => {
                 match opcode {
                     0x00 => { self.nop() }
-                    0x05 => { self.dec_b() }
-                    0x06 => { self.ld_b_d8() }
+
+                    /* math */
                     0x0C => { self.inc_c() }
-                    0x0E => { self.ldd_c_d8() }
-                    0x11 => { self.ld_de_d16() }
+                    0x1C => { self.inc_e() }
+                    0x2C => { self.inc_l() }
+                    0x3C => { self.inc_a() }
+                    0x04 => { self.inc_b() }
+                    0x14 => { self.inc_d() }
+                    0x24 => { self.inc_h() }
+
                     0x13 => { self.inc_de() }
-                    0x17 => { self.rla() }
-                    0x1A => { self.ld_a_de() }
-                    0x20 => { self.jr(Flag::ZERO, false) }
-                    0x21 => { self.ld_hl_d16() }
-                    0x22 => { self.ldi_hl_a() }
                     0x23 => { self.inc_hl() }
-                    0x28 => { self.jr(Flag::ZERO, true) }
-                    0x31 => { self.ld_sp_d16() }
-                    0x32 => { self.ldd_hl_a() }
-                    0x3E => { self.ldd_a_d8() }
-                    0x4F => { self.ld_c_a() }
-                    0x77 => { self.ld_hl_a() }
-                    0x7B => { self.ld_a_e() }
+
+                    0x0D => { self.dec_c() }
+                    0x1D => { self.dec_e() }
+                    0x2D => { self.dec_l() }
+                    0x3D => { self.dec_a() }
+                    0x05 => { self.dec_b() }
+                    0x15 => { self.dec_d() }
+                    0x25 => { self.dec_h() }
+
                     0xAF => { self.xor_a() }
-                    0xC1 => { self.pop_bc() }
+
+                    0x17 => { self.rla() }
+
+                    /* flow */
+                    0x18 => { self.jr_r8() }
+                    0x28 => { self.jr(Flag::ZERO, true) }
+                    0x20 => { self.jr(Flag::ZERO, false) }
                     0xC3 => { self.jmp_a16() }
-                    0xC5 => { self.push_bc() }
+
                     0xCD => { self.call() }
-                    0xE0 => { self.ldh_a8_a() }
-                    0xE1 => { self.pop_hl() }
-                    0xE2 => { self.load_relative_c_a() }
-                    0xFE => { self.cp_d8() }
+
                     0xC9 => { self.ret() }
+
+                    /* stack */
+                    0xFE => { self.cp_d8() }
+
+                    0xC5 => { self.push_bc() }
+
+                    0xC1 => { self.pop_bc() }
+                    0xE1 => { self.pop_hl() }
+
+                    /* loading */
+                    0x7F => { unborrow!(self.ld_a(self.a())) }
+                    0x78 => { unborrow!(self.ld_a(self.b())) }
+                    0x79 => { unborrow!(self.ld_a(self.c())) }
+                    0x7A => { unborrow!(self.ld_a(self.d())) }
+                    0x7B => { unborrow!(self.ld_a(self.e())) }
+                    0x7C => { unborrow!(self.ld_a(self.h())) }
+                    0x7D => { unborrow!(self.ld_a(self.l())) }
+
+                    0x47 => { unborrow!(self.ld_b(self.a())) }
+                    0x40 => { unborrow!(self.ld_b(self.b())) }
+                    0x41 => { unborrow!(self.ld_b(self.c())) }
+                    0x42 => { unborrow!(self.ld_b(self.d())) }
+                    0x43 => { unborrow!(self.ld_b(self.e())) }
+                    0x44 => { unborrow!(self.ld_b(self.h())) }
+                    0x45 => { unborrow!(self.ld_b(self.l())) }
+
+                    0x4F => { unborrow!(self.ld_c(self.a())) }
+                    0x48 => { unborrow!(self.ld_c(self.b())) }
+                    0x49 => { unborrow!(self.ld_c(self.c())) }
+                    0x4A => { unborrow!(self.ld_c(self.d())) }
+                    0x4B => { unborrow!(self.ld_c(self.e())) }
+                    0x4C => { unborrow!(self.ld_c(self.h())) }
+                    0x4D => { unborrow!(self.ld_c(self.l())) }
+
+                    0x57 => { unborrow!(self.ld_d(self.a())) }
+                    0x50 => { unborrow!(self.ld_d(self.b())) }
+                    0x51 => { unborrow!(self.ld_d(self.c())) }
+                    0x52 => { unborrow!(self.ld_d(self.d())) }
+                    0x53 => { unborrow!(self.ld_d(self.e())) }
+                    0x54 => { unborrow!(self.ld_d(self.h())) }
+                    0x55 => { unborrow!(self.ld_d(self.l())) }
+
+                    0x5F => { unborrow!(self.ld_e(self.a())) }
+                    0x58 => { unborrow!(self.ld_e(self.b())) }
+                    0x59 => { unborrow!(self.ld_e(self.c())) }
+                    0x5A => { unborrow!(self.ld_e(self.d())) }
+                    0x5B => { unborrow!(self.ld_e(self.e())) }
+                    0x5C => { unborrow!(self.ld_e(self.h())) }
+                    0x5D => { unborrow!(self.ld_e(self.l())) }
+
+                    0x67 => { unborrow!(self.ld_h(self.a())) }
+                    0x60 => { unborrow!(self.ld_h(self.b())) }
+                    0x61 => { unborrow!(self.ld_h(self.c())) }
+                    0x62 => { unborrow!(self.ld_h(self.d())) }
+                    0x63 => { unborrow!(self.ld_h(self.e())) }
+                    0x64 => { unborrow!(self.ld_h(self.h())) }
+                    0x65 => { unborrow!(self.ld_h(self.l())) }
+
+                    0x6F => { unborrow!(self.ld_l(self.a())) }
+                    0x68 => { unborrow!(self.ld_l(self.b())) }
+                    0x69 => { unborrow!(self.ld_l(self.c())) }
+                    0x6A => { unborrow!(self.ld_l(self.d())) }
+                    0x6B => { unborrow!(self.ld_l(self.e())) }
+                    0x6C => { unborrow!(self.ld_l(self.h())) }
+                    0x6D => { unborrow!(self.ld_l(self.l())) }
+
+                    0x1A => { self.ld_a_de() }
+
+                    0x3E => { self.ld_a_d8() }
+                    0x06 => { self.ld_b_d8() }
+                    0x0E => { self.ld_c_d8() }
+                    0x16 => { self.ld_d_d8() }
+                    0x1E => { self.ld_e_d8() }
+                    0x26 => { self.ld_h_d8() }
+                    0x2E => { self.ld_l_d8() }
+
+                    0x77 => { self.ld_hl_a() }
+
+                    0x11 => { self.ld_de_d16() }
+                    0x21 => { self.ld_hl_d16() }
+                    0x31 => { self.ld_sp_d16() }
+
+                    0x22 => { self.ldi_hl_a() }
+
+                    0x32 => { self.ldd_hl_a() }
+
+                    0xE0 => { self.ldh_a8_a() }
+                    0xF0 => { self.ldh_a_a8() }
+
+                    0xE2 => { self.ldr_c_a() }
+                    0xEA => { self.ld_a16_a() }
                     _ => {
                         println!("unrecognized opcode {:0>2X}", opcode);
                         self.screen.debug(&self.memory);
@@ -219,6 +315,14 @@ impl Cpu {
         size
     }
 
+    fn ld_a_d8(&mut self) -> u16 {
+        let size = 2;
+        let value = self.memory[self.pc + 1];
+        self.print_disassembly(format!("LD A, 0x{:0>2X}", value), size);
+        self.reg_a = value;
+        size
+    }
+
     fn ld_b_d8(&mut self) -> u16 {
         let size = 2;
         let value = self.memory[self.pc + 1];
@@ -227,17 +331,100 @@ impl Cpu {
         size
     }
 
-    fn ld_a_e(&mut self) -> u16 {
-        let size = 1;
-        self.print_disassembly(format!("LD A, E"), size);
-        self.reg_a = self.reg_e;
+    fn ld_c_d8(&mut self) -> u16 {
+        let size = 2;
+        let value = self.memory[self.pc + 1];
+        self.print_disassembly(format!("LD C, 0x{:0>2X}", value), size);
+        self.reg_c = value;
         size
     }
 
-    fn ld_c_a(&mut self) -> u16 {
+    fn ld_d_d8(&mut self) -> u16 {
+        let size = 2;
+        let value = self.memory[self.pc + 1];
+        self.print_disassembly(format!("LD D, 0x{:0>2X}", value), size);
+        self.reg_d = value;
+        size
+    }
+
+    fn ld_e_d8(&mut self) -> u16 {
+        let size = 2;
+        let value = self.memory[self.pc + 1];
+        self.print_disassembly(format!("LD E, 0x{:0>2X}", value), size);
+        self.reg_e = value;
+        size
+    }
+
+    fn ld_h_d8(&mut self) -> u16 {
+        let size = 2;
+        let value = self.memory[self.pc + 1];
+        self.print_disassembly(format!("LD H, 0x{:0>2X}", value), size);
+        self.reg_h = value;
+        size
+    }
+
+    fn ld_l_d8(&mut self) -> u16 {
+        let size = 2;
+        let value = self.memory[self.pc + 1];
+        self.print_disassembly(format!("LD L, 0x{:0>2X}", value), size);
+        self.reg_l = value;
+        size
+    }
+
+    fn a(&self) -> u8 { self.reg_a }
+    fn b(&self) -> u8 { self.reg_b }
+    fn c(&self) -> u8 { self.reg_c }
+    fn d(&self) -> u8 { self.reg_d }
+    fn e(&self) -> u8 { self.reg_e }
+    fn h(&self) -> u8 { self.reg_h }
+    fn l(&self) -> u8 { self.reg_l }
+
+    fn ld_a(&mut self, value: u8) -> u16 {
         let size = 1;
-        self.print_disassembly(format!("LD C, A"), size);
-        self.reg_c = self.reg_a;
+        self.reg_a = value;
+        self.print_disassembly(format!("LD A, {:0>2X}", value), size);
+        size
+    }
+
+    fn ld_b(&mut self, value: u8) -> u16 {
+        let size = 1;
+        self.reg_b = value;
+        self.print_disassembly(format!("LD B, {:0>2X}", value), size);
+        size
+    }
+
+    fn ld_c(&mut self, value: u8) -> u16 {
+        let size = 1;
+        self.reg_c = value;
+        self.print_disassembly(format!("LD C, {:0>2X}", value), size);
+        size
+    }
+
+    fn ld_d(&mut self, value: u8) -> u16 {
+        let size = 1;
+        self.reg_d = value;
+        self.print_disassembly(format!("LD D, {:0>2X}", value), size);
+        size
+    }
+
+    fn ld_e(&mut self, value: u8) -> u16 {
+        let size = 1;
+        self.reg_e = value;
+        self.print_disassembly(format!("LD E, {:0>2X}", value), size);
+        size
+    }
+
+    fn ld_h(&mut self, value: u8) -> u16 {
+        let size = 1;
+        self.reg_h = value;
+        self.print_disassembly(format!("LD H, {:0>2X}", value), size);
+        size
+    }
+
+    fn ld_l(&mut self, value: u8) -> u16 {
+        let size = 1;
+        self.reg_l = value;
+        self.print_disassembly(format!("LD L, {:0>2X}", value), size);
         size
     }
 
@@ -287,6 +474,20 @@ impl Cpu {
         size
     }
 
+    fn inc_a(&mut self) -> u16 {
+        let size = 1;
+        self.print_disassembly(format!("INC A"), size);
+        self.reg_a = self.reg_a.wrapping_add(1);
+        size
+    }
+
+    fn inc_b(&mut self) -> u16 {
+        let size = 1;
+        self.print_disassembly(format!("INC B"), size);
+        self.reg_b = self.reg_b.wrapping_add(1);
+        size
+    }
+
     fn inc_c(&mut self) -> u16 {
         let size = 1;
         self.print_disassembly(format!("INC C"), size);
@@ -294,27 +495,47 @@ impl Cpu {
         size
     }
 
-    fn load_relative_c_a(&mut self) -> u16 {
+    fn inc_d(&mut self) -> u16 {
         let size = 1;
-        let value = 0xFF00 + self.reg_c as u16;
+        self.print_disassembly(format!("INC D"), size);
+        self.reg_d = self.reg_d.wrapping_add(1);
+        size
+    }
+
+    fn inc_e(&mut self) -> u16 {
+        let size = 1;
+        self.print_disassembly(format!("INC E"), size);
+        self.reg_e = self.reg_e.wrapping_add(1);
+        size
+    }
+
+    fn inc_h(&mut self) -> u16 {
+        let size = 1;
+        self.print_disassembly(format!("INC H"), size);
+        self.reg_h = self.reg_h.wrapping_add(1);
+        size
+    }
+
+    fn inc_l(&mut self) -> u16 {
+        let size = 1;
+        self.print_disassembly(format!("INC L"), size);
+        self.reg_l = self.reg_l.wrapping_add(1);
+        size
+    }
+
+    fn ldr_c_a(&mut self) -> u16 {
+        let size = 1;
+        let address = 0xFF00 + self.reg_c as u16;
         self.print_disassembly(format!("LD +${:0>2X}, {:0>2X}", self.reg_c, self.reg_a), size);
-        self.memory[value] = self.reg_a;
+        self.memory[address] = self.reg_a;
         size
     }
 
-    fn ldd_a_d8(&mut self) -> u16 {
-        let size = 2;
-        let value = self.memory[self.pc + 1];
-        self.print_disassembly(format!("LD A,${:0>2X}", value), size);
-        self.reg_a = value;
-        size
-    }
-
-    fn ldd_c_d8(&mut self) -> u16 {
-        let size = 2;
-        let value = self.memory[self.pc + 1];
-        self.print_disassembly(format!("LD C,${:0>2X}", value), size);
-        self.reg_c = value;
+    fn ld_a16_a(&mut self) -> u16 {
+        let size = 3;
+        let address = self.read_word(self.pc+1);
+        self.print_disassembly(format!("LD ${:0>4X}, {:0>2X}", address, self.reg_a), size);
+        self.memory[address] = self.reg_a;
         size
     }
 
@@ -415,6 +636,16 @@ impl Cpu {
         size
     }
 
+    fn jr_r8(&mut self) -> u16 {
+        let size = 2;
+        let offset = self.memory[self.pc + 1] as i8;
+        let address = self.pc.wrapping_add(offset as u16);
+        self.print_disassembly(format!("JR $+{:0>2X} ; 0x{:0>4X}", offset, address + 1), size);
+
+        self.pc = address;
+        size
+    }
+
     fn jr(&mut self, flag: Flag, zero: bool) -> u16 {
         let size = 2;
         let offset = self.memory[self.pc + 1] as i8;
@@ -443,6 +674,17 @@ impl Cpu {
         let size = 1;
         self.print_disassembly(format!("XOR A"), size);
         self.reg_a ^= self.reg_a;
+        size
+    }
+
+    fn ldh_a_a8(&mut self) -> u16{
+        let size = 2;
+        let offset = self.memory[self.pc + 1];
+        self.print_disassembly(format!("LDH A, (${:0>2X})", offset), size);
+
+        let address = 0xFF00 + offset as u16;
+        self.memory[address] = self.reg_a;
+
         size
     }
 
@@ -483,6 +725,20 @@ impl Cpu {
         size
     }
 
+    fn dec_a(&mut self) -> u16 {
+        let size = 1;
+        self.print_disassembly(format!("DEC A"), size);
+
+        let half = self.reg_a == 0;
+        self.set(Flag::HALFCARRY, half);
+        self.reg_a = self.reg_a.wrapping_sub(1);
+
+        let zero = self.reg_a == 0;
+        self.set(Flag::ZERO, zero);
+        self.set(Flag::SUBTRACT, true);
+        size
+    }
+
     fn dec_b(&mut self) -> u16 {
         let size = 1;
         self.print_disassembly(format!("DEC B"), size);
@@ -492,6 +748,76 @@ impl Cpu {
         self.reg_b = self.reg_b.wrapping_sub(1);
 
         let zero = self.reg_b == 0;
+        self.set(Flag::ZERO, zero);
+        self.set(Flag::SUBTRACT, true);
+        size
+    }
+
+    fn dec_c(&mut self) -> u16 {
+        let size = 1;
+        self.print_disassembly(format!("DEC C"), size);
+
+        let half = self.reg_c == 0;
+        self.set(Flag::HALFCARRY, half);
+        self.reg_c = self.reg_c.wrapping_sub(1);
+
+        let zero = self.reg_c == 0;
+        self.set(Flag::ZERO, zero);
+        self.set(Flag::SUBTRACT, true);
+        size
+    }
+
+    fn dec_d(&mut self) -> u16 {
+        let size = 1;
+        self.print_disassembly(format!("DEC D"), size);
+
+        let half = self.reg_d == 0;
+        self.set(Flag::HALFCARRY, half);
+        self.reg_d = self.reg_d.wrapping_sub(1);
+
+        let zero = self.reg_d == 0;
+        self.set(Flag::ZERO, zero);
+        self.set(Flag::SUBTRACT, true);
+        size
+    }
+
+    fn dec_e(&mut self) -> u16 {
+        let size = 1;
+        self.print_disassembly(format!("DEC E"), size);
+
+        let half = self.reg_e == 0;
+        self.set(Flag::HALFCARRY, half);
+        self.reg_e = self.reg_e.wrapping_sub(1);
+
+        let zero = self.reg_e == 0;
+        self.set(Flag::ZERO, zero);
+        self.set(Flag::SUBTRACT, true);
+        size
+    }
+
+    fn dec_h(&mut self) -> u16 {
+        let size = 1;
+        self.print_disassembly(format!("DEC H"), size);
+
+        let half = self.reg_h == 0;
+        self.set(Flag::HALFCARRY, half);
+        self.reg_h = self.reg_h.wrapping_sub(1);
+
+        let zero = self.reg_h == 0;
+        self.set(Flag::ZERO, zero);
+        self.set(Flag::SUBTRACT, true);
+        size
+    }
+
+    fn dec_l(&mut self) -> u16 {
+        let size = 1;
+        self.print_disassembly(format!("DEC L"), size);
+
+        let half = self.reg_l == 0;
+        self.set(Flag::HALFCARRY, half);
+        self.reg_l = self.reg_l.wrapping_sub(1);
+
+        let zero = self.reg_l == 0;
         self.set(Flag::ZERO, zero);
         self.set(Flag::SUBTRACT, true);
         size

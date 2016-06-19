@@ -3,6 +3,7 @@ name = "rustboy"
 version = "0.1.0"
 dependencies = [
  "minifb 0.7.1 (git+https://github.com/jedahan/rust_minifb.git)",
+ "unborrow 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -78,6 +79,11 @@ dependencies = [
  "libc 0.2.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "winapi 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
+
+[[package]]
+name = "unborrow"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "user32-sys"
