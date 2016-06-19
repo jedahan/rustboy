@@ -146,6 +146,7 @@ impl Cpu {
                     0x0C => { self.inc_c() }
                     0x0E => { self.ldd_c_d8() }
                     0x11 => { self.ld_de_d16() }
+                    0x13 => { self.inc_de() }
                     0x17 => { self.rla() }
                     0x1A => { self.ld_a_de() }
                     0x20 => { self.jr(Flag::ZERO, false) }
@@ -158,6 +159,7 @@ impl Cpu {
                     0x3E => { self.ldd_a_d8() }
                     0x4F => { self.ld_c_a() }
                     0x77 => { self.ld_hl_a() }
+                    0x7B => { self.ld_a_e() }
                     0xAF => { self.xor_a() }
                     0xC1 => { self.pop_bc() }
                     0xC3 => { self.jmp_a16() }
@@ -166,6 +168,7 @@ impl Cpu {
                     0xE0 => { self.ldh_a8_a() }
                     0xE1 => { self.pop_hl() }
                     0xE2 => { self.load_relative_c_a() }
+                    0xFE => { self.cp_d8() }
                     0xC9 => { self.ret() }
                     _ => {
                         println!("unrecognized opcode {:0>2X}", opcode);
@@ -178,15 +181,21 @@ impl Cpu {
     }
 
     pub fn get(&self, flag: Flag) -> bool { self.reg_f & flag.to_u8() != 0 }
-    pub fn set(&mut self, flag: Flag) { self.reg_f |= flag.to_u8(); }
-    pub fn unset(&mut self, flag: Flag) { self.reg_f &= ! flag.to_u8(); }
+
+    pub fn set(&mut self, flag: Flag, set: bool) {
+        if set {
+            self.reg_f |= flag.to_u8();
+        } else {
+            self.reg_f &= ! flag.to_u8();
+        }
+    }
 
     fn rla(&mut self) -> u16 {
         let size = 1;
         let amount = self.memory[self.pc + 1];
         self.print_disassembly(format!("RLA ({})", amount), size);
         if self.reg_a & 0b10000000 != 0 {
-            self.set(Flag::CARRY)
+            self.set(Flag::CARRY, true)
         }
         self.reg_a <<= amount as u32;
         size
@@ -215,6 +224,13 @@ impl Cpu {
         let value = self.memory[self.pc + 1];
         self.print_disassembly(format!("LD B, 0x{:0>2X}", value), size);
         self.reg_b = value;
+        size
+    }
+
+    fn ld_a_e(&mut self) -> u16 {
+        let size = 1;
+        self.print_disassembly(format!("LD A, E"), size);
+        self.reg_a = self.reg_e;
         size
     }
 
@@ -377,6 +393,11 @@ impl Cpu {
         self.reg_h = (address >> 8) as u8;
     }
 
+    fn store_de(&mut self, address: u16) {
+        self.reg_e = (address >> 0) as u8;
+        self.reg_d = (address >> 8) as u8;
+    }
+
     fn ldd_hl_a(&mut self) -> u16 {
         let size = 1;
         self.print_disassembly(format!("LD (HL-) ({:0>2X}{:0>2X}), {:?}", self.reg_h, self.reg_l, self.reg_a), size);
@@ -408,14 +429,10 @@ impl Cpu {
 
     fn bit_h(&mut self, bit: u8) -> u16 {
         let size = 1;
-        self.unset(Flag::SUBTRACT);
-        self.set(Flag::HALFCARRY);
-
-        if self.reg_h & (1<<bit) == 0 {
-            self.set(Flag::ZERO);
-        } else {
-            self.unset(Flag::ZERO);
-        }
+        let h = self.reg_h;
+        self.set(Flag::ZERO, h & (1<<bit) == 0);
+        self.set(Flag::SUBTRACT, false);
+        self.set(Flag::HALFCARRY, true);
 
         self.print_disassembly(format!("BIT {}, H", bit), size);
         size
@@ -469,14 +486,22 @@ impl Cpu {
     fn dec_b(&mut self) -> u16 {
         let size = 1;
         self.print_disassembly(format!("DEC B"), size);
-        if self.reg_b == 0 {
-            self.set(Flag::HALFCARRY);
-        }
-        self.reg_b.wrapping_sub(1);
-        if self.reg_b == 0 {
-            self.set(Flag::ZERO);
-        }
-        self.set(Flag::SUBTRACT);
+
+        let half = self.reg_b == 0;
+        self.set(Flag::HALFCARRY, half);
+        self.reg_b = self.reg_b.wrapping_sub(1);
+
+        let zero = self.reg_b == 0;
+        self.set(Flag::ZERO, zero);
+        self.set(Flag::SUBTRACT, true);
+        size
+    }
+
+    fn inc_de(&mut self) -> u16 {
+        let size = 1;
+        self.print_disassembly(format!("INC DE"), size);
+        let value = self.de();
+        self.store_de(value.wrapping_add(1));
         size
     }
 
@@ -485,6 +510,18 @@ impl Cpu {
         self.print_disassembly(format!("INC HL"), size);
         let value = self.hl();
         self.store_hl(value.wrapping_add(1));
+        size
+    }
+
+    fn cp_d8(&mut self) -> u16 {
+        let size = 2;
+        let a = self.reg_a;
+        let value = self.memory[self.pc + 1];
+        self.print_disassembly(format!("CP {:0>2X}", value), size);
+        self.set(Flag::ZERO, a == value);
+        self.set(Flag::SUBTRACT, true);
+        self.set(Flag::HALFCARRY, (a << 4) < (value << 4));
+        self.set(Flag::CARRY, a < value);
         size
     }
 }
