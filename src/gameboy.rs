@@ -3,7 +3,7 @@ use std::fmt;
 use cpu;
 use cart;
 use memory;
-use screen;
+use debug;
 
 pub const BOOTROM_SIZE: usize = 256;
 
@@ -14,7 +14,7 @@ pub struct GameBoy {
 impl GameBoy {
     pub fn new(boot: [u8; BOOTROM_SIZE], cart: cart::Cart) -> GameBoy {
         let memory = memory::Memory::new(boot, cart);
-        let screen = screen::Screen::new(160,144);
+        let screen = debug::Screen::new(160,144);
         GameBoy {
             cpu: cpu::Cpu::new(memory, screen)
         }

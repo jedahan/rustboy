@@ -1,6 +1,6 @@
 use std::fmt;
 
-use screen;
+use debug;
 use memory;
 use std::fmt::Write;
 use std::env;
@@ -24,7 +24,7 @@ pub struct Cpu {
     reg_h: u8,
     reg_l: u8,
     memory: memory::Memory,
-    screen: screen::Screen,
+    screen: debug::Screen,
     operations: usize,
     debug: bool,
 }
@@ -51,7 +51,7 @@ impl Cpu {
         panic!(message);
     }
 
-    pub fn new(memory: memory::Memory, screen: screen::Screen) -> Cpu {
+    pub fn new(memory: memory::Memory, screen: debug::Screen) -> Cpu {
         let debug = match env::var("DEBUG") {
             Ok(_) => true,
             _ => false
@@ -358,7 +358,7 @@ impl Cpu {
     fn ld_h_d8(&mut self) -> u16 {
         let size = 2;
         let value = self.memory[self.pc + 1];
-        self.print_disassembly(format!("LD H, 0x{:0>2X}", value), size);
+        self.print_disassembly(format!("LD H, ? ; 0x{:0>2X}", value), size);
         self.reg_h = value;
         size
     }
@@ -382,49 +382,49 @@ impl Cpu {
     fn ld_a(&mut self, value: u8) -> u16 {
         let size = 1;
         self.reg_a = value;
-        self.print_disassembly(format!("LD A, {:0>2X}", value), size);
+        self.print_disassembly(format!("LD A, ?; {:0>2X}", value), size);
         size
     }
 
     fn ld_b(&mut self, value: u8) -> u16 {
         let size = 1;
         self.reg_b = value;
-        self.print_disassembly(format!("LD B, {:0>2X}", value), size);
+        self.print_disassembly(format!("LD B, ?; {:0>2X}", value), size);
         size
     }
 
     fn ld_c(&mut self, value: u8) -> u16 {
         let size = 1;
         self.reg_c = value;
-        self.print_disassembly(format!("LD C, {:0>2X}", value), size);
+        self.print_disassembly(format!("LD C, ?; {:0>2X}", value), size);
         size
     }
 
     fn ld_d(&mut self, value: u8) -> u16 {
         let size = 1;
         self.reg_d = value;
-        self.print_disassembly(format!("LD D, {:0>2X}", value), size);
+        self.print_disassembly(format!("LD D, ?; {:0>2X}", value), size);
         size
     }
 
     fn ld_e(&mut self, value: u8) -> u16 {
         let size = 1;
         self.reg_e = value;
-        self.print_disassembly(format!("LD E, {:0>2X}", value), size);
+        self.print_disassembly(format!("LD E, ?; {:0>2X}", value), size);
         size
     }
 
     fn ld_h(&mut self, value: u8) -> u16 {
         let size = 1;
         self.reg_h = value;
-        self.print_disassembly(format!("LD H, {:0>2X}", value), size);
+        self.print_disassembly(format!("LD H, ?; {:0>2X}", value), size);
         size
     }
 
     fn ld_l(&mut self, value: u8) -> u16 {
         let size = 1;
         self.reg_l = value;
-        self.print_disassembly(format!("LD L, {:0>2X}", value), size);
+        self.print_disassembly(format!("LD L, ?; {:0>2X}", value), size);
         size
     }
 
@@ -650,7 +650,8 @@ impl Cpu {
         let size = 2;
         let offset = self.memory[self.pc + 1] as i8;
         let address = self.pc.wrapping_add(offset as u16);
-        self.print_disassembly(format!("JR NZ, $+{:0>2X} ; 0x{:0>4X}", offset, address + 1), size);
+        let n = if zero { "" } else { "N" };
+        self.print_disassembly(format!("JR {}Z, $+{:0>2X} ; 0x{:0>4X}", n, offset, address + 1), size);
 
         if self.get(flag) == zero {
             self.pc = address;
@@ -843,11 +844,14 @@ impl Cpu {
         let size = 2;
         let a = self.reg_a;
         let value = self.memory[self.pc + 1];
-        self.print_disassembly(format!("CP {:0>2X}", value), size);
+        self.print_disassembly(format!("CP 0x{:0>2X}", value), size);
         self.set(Flag::ZERO, a == value);
         self.set(Flag::SUBTRACT, true);
         self.set(Flag::HALFCARRY, (a << 4) < (value << 4));
         self.set(Flag::CARRY, a < value);
+        if value==0x90 {
+            self.crash(format!("HEY WAT IS GOING ON"))
+        }
         size
     }
 }

@@ -6,7 +6,8 @@ mod cpu;
 mod memory;
 mod cart;
 mod header;
-mod screen;
+mod debug;
+mod lcd;
 
 use std::env;
 use std::fs;
