@@ -8,6 +8,7 @@ mod cart;
 mod header;
 mod debug;
 mod lcd;
+mod window;
 
 use std::env;
 use std::fs;

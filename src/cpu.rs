@@ -1,15 +1,22 @@
 use std::fmt;
 
-use debug;
+use window;
 use memory;
 use std::fmt::Write;
 use std::env;
 use std::time::{Duration, Instant};
 
-pub enum Flag {ZERO, SUBTRACT, HALFCARRY, CARRY}
+pub enum Flag {
+    ZERO,
+    SUBTRACT,
+    HALFCARRY,
+    CARRY,
+}
 
 impl Flag {
-    fn to_u8(self) -> u8 { 1 << (7 - self as u8) }
+    fn to_u8(self) -> u8 {
+        1 << (7 - self as u8)
+    }
 }
 
 pub struct Cpu {
@@ -24,22 +31,28 @@ pub struct Cpu {
     reg_h: u8,
     reg_l: u8,
     memory: memory::Memory,
-    screen: debug::Screen,
+    screen: Box<window::Drawable>,
     operations: usize,
     debug: bool,
 }
 
 impl Cpu {
-
     fn print_stack_and_vram(&self, height: usize) {
         println!("mem {{\n  stack:\tvram:");
         for depth in 0..height {
             let byte = 0xFFFF - depth as u16;
-            let arrow = if self.sp == byte { "❯" } else { " " };
+            let arrow = if self.sp == byte {
+                "❯"
+            } else {
+                " "
+            };
 
             println!("{}   0x{:0>4X}: {:0>2X} \t  0x{:0>4X}: {:0>2X} \t\t",
-                arrow, byte, self.memory[byte], byte-0x6000, self.memory[byte-0x6000]
-            )
+                     arrow,
+                     byte,
+                     self.memory[byte],
+                     byte - 0x6000,
+                     self.memory[byte - 0x6000])
         }
         println!("}}");
 
@@ -51,10 +64,10 @@ impl Cpu {
         panic!(message);
     }
 
-    pub fn new(memory: memory::Memory, screen: debug::Screen) -> Cpu {
+    pub fn new(memory: memory::Memory, screen: Box<window::Drawable>) -> Cpu {
         let debug = match env::var("DEBUG") {
             Ok(_) => true,
-            _ => false
+            _ => false,
         };
         Cpu {
             pc: 0,
@@ -73,14 +86,13 @@ impl Cpu {
             operations: 0,
             debug: debug,
 
-            memory: memory
+            memory: memory,
         }
     }
 
     // Not sure if this is little-endian or big-endian
     fn read_word(&self, address: u16) -> u16 {
-        (self.memory[address + 1] as u16) << 8 |
-        (self.memory[address + 0] as u16)
+        (self.memory[address + 1] as u16) << 8 | (self.memory[address + 0] as u16)
     }
 
     pub fn reset(&mut self) {
@@ -106,13 +118,15 @@ impl Cpu {
             let advance = self.execute(instruction);
             self.pc += advance;
             self.operations += 1;
+            self.screen.update(&self.memory);
+
+            let now = Instant::now();
+            if now - previous_draw > frame_duration {
+                self.screen.draw(&self.memory);
+                previous_draw = now;
+            }
 
             if self.debug {
-                let now = Instant::now();
-                if now - previous_draw > frame_duration {
-                    self.screen.draw(&self.memory);
-                    previous_draw = now;
-                }
                 println!("{:0>4X}: {}", self.operations, self);
             }
         }
@@ -123,7 +137,7 @@ impl Cpu {
         if opcode == 0xCB {
             self.pc += 1;
 
-            return (opcode, self.memory[self.pc])
+            return (opcode, self.memory[self.pc]);
         }
         (0, opcode)
     }
@@ -133,142 +147,144 @@ impl Cpu {
             // z80prefix
             (0xCB, opcode) => {
                 match opcode {
-                    0x7C => { self.bit_h(7) }
-                    0x11 => { self.rl_c() }
-                    _ => { self.crash(format!("unrecognized z80 opcode {:0>2X}", opcode)); unreachable!() }
+                    0x7C => self.bit_h(7),
+                    0x11 => self.rl_c(),
+                    _ => {
+                        self.crash(format!("unrecognized z80 opcode {:0>2X}", opcode));
+                        unreachable!()
+                    }
                 }
             }
             (_, opcode) => {
                 match opcode {
-                    0x00 => { self.nop() }
+                    0x00 => self.nop(),
 
-                    /* math */
-                    0x0C => { self.inc_c() }
-                    0x1C => { self.inc_e() }
-                    0x2C => { self.inc_l() }
-                    0x3C => { self.inc_a() }
-                    0x04 => { self.inc_b() }
-                    0x14 => { self.inc_d() }
-                    0x24 => { self.inc_h() }
+                    // math
+                    0x0C => self.inc_c(),
+                    0x1C => self.inc_e(),
+                    0x2C => self.inc_l(),
+                    0x3C => self.inc_a(),
+                    0x04 => self.inc_b(),
+                    0x14 => self.inc_d(),
+                    0x24 => self.inc_h(),
 
-                    0x13 => { self.inc_de() }
-                    0x23 => { self.inc_hl() }
+                    0x13 => self.inc_de(),
+                    0x23 => self.inc_hl(),
 
-                    0x0D => { self.dec_c() }
-                    0x1D => { self.dec_e() }
-                    0x2D => { self.dec_l() }
-                    0x3D => { self.dec_a() }
-                    0x05 => { self.dec_b() }
-                    0x15 => { self.dec_d() }
-                    0x25 => { self.dec_h() }
+                    0x0D => self.dec_c(),
+                    0x1D => self.dec_e(),
+                    0x2D => self.dec_l(),
+                    0x3D => self.dec_a(),
+                    0x05 => self.dec_b(),
+                    0x15 => self.dec_d(),
+                    0x25 => self.dec_h(),
 
-                    0xAF => { self.xor_a() }
+                    0xAF => self.xor_a(),
 
-                    0x17 => { self.rla() }
+                    0x17 => self.rla(),
 
-                    /* flow */
-                    0x18 => { self.jr_r8() }
-                    0x28 => { self.jr(Flag::ZERO, true) }
-                    0x20 => { self.jr(Flag::ZERO, false) }
-                    0xC3 => { self.jmp_a16() }
+                    // flow
+                    0x18 => self.jr_r8(),
+                    0x28 => self.jr(Flag::ZERO, true),
+                    0x20 => self.jr(Flag::ZERO, false),
+                    0xC3 => self.jmp_a16(),
 
-                    0xCD => { self.call() }
+                    0xCD => self.call(),
 
-                    0xC9 => { self.ret() }
+                    0xC9 => self.ret(),
 
-                    /* stack */
-                    0xFE => { self.cp_d8() }
+                    // stack
+                    0xFE => self.cp_d8(),
 
-                    0xC5 => { self.push_bc() }
+                    0xC5 => self.push_bc(),
 
-                    0xC1 => { self.pop_bc() }
-                    0xE1 => { self.pop_hl() }
+                    0xC1 => self.pop_bc(),
+                    0xE1 => self.pop_hl(),
 
-                    /* loading */
-                    0x7F => { unborrow!(self.ld_a(self.a())) }
-                    0x78 => { unborrow!(self.ld_a(self.b())) }
-                    0x79 => { unborrow!(self.ld_a(self.c())) }
-                    0x7A => { unborrow!(self.ld_a(self.d())) }
-                    0x7B => { unborrow!(self.ld_a(self.e())) }
-                    0x7C => { unborrow!(self.ld_a(self.h())) }
-                    0x7D => { unborrow!(self.ld_a(self.l())) }
+                    // loading
+                    0x7F => unborrow!(self.ld_a(self.a())),
+                    0x78 => unborrow!(self.ld_a(self.b())),
+                    0x79 => unborrow!(self.ld_a(self.c())),
+                    0x7A => unborrow!(self.ld_a(self.d())),
+                    0x7B => unborrow!(self.ld_a(self.e())),
+                    0x7C => unborrow!(self.ld_a(self.h())),
+                    0x7D => unborrow!(self.ld_a(self.l())),
 
-                    0x47 => { unborrow!(self.ld_b(self.a())) }
-                    0x40 => { unborrow!(self.ld_b(self.b())) }
-                    0x41 => { unborrow!(self.ld_b(self.c())) }
-                    0x42 => { unborrow!(self.ld_b(self.d())) }
-                    0x43 => { unborrow!(self.ld_b(self.e())) }
-                    0x44 => { unborrow!(self.ld_b(self.h())) }
-                    0x45 => { unborrow!(self.ld_b(self.l())) }
+                    0x47 => unborrow!(self.ld_b(self.a())),
+                    0x40 => unborrow!(self.ld_b(self.b())),
+                    0x41 => unborrow!(self.ld_b(self.c())),
+                    0x42 => unborrow!(self.ld_b(self.d())),
+                    0x43 => unborrow!(self.ld_b(self.e())),
+                    0x44 => unborrow!(self.ld_b(self.h())),
+                    0x45 => unborrow!(self.ld_b(self.l())),
 
-                    0x4F => { unborrow!(self.ld_c(self.a())) }
-                    0x48 => { unborrow!(self.ld_c(self.b())) }
-                    0x49 => { unborrow!(self.ld_c(self.c())) }
-                    0x4A => { unborrow!(self.ld_c(self.d())) }
-                    0x4B => { unborrow!(self.ld_c(self.e())) }
-                    0x4C => { unborrow!(self.ld_c(self.h())) }
-                    0x4D => { unborrow!(self.ld_c(self.l())) }
+                    0x4F => unborrow!(self.ld_c(self.a())),
+                    0x48 => unborrow!(self.ld_c(self.b())),
+                    0x49 => unborrow!(self.ld_c(self.c())),
+                    0x4A => unborrow!(self.ld_c(self.d())),
+                    0x4B => unborrow!(self.ld_c(self.e())),
+                    0x4C => unborrow!(self.ld_c(self.h())),
+                    0x4D => unborrow!(self.ld_c(self.l())),
 
-                    0x57 => { unborrow!(self.ld_d(self.a())) }
-                    0x50 => { unborrow!(self.ld_d(self.b())) }
-                    0x51 => { unborrow!(self.ld_d(self.c())) }
-                    0x52 => { unborrow!(self.ld_d(self.d())) }
-                    0x53 => { unborrow!(self.ld_d(self.e())) }
-                    0x54 => { unborrow!(self.ld_d(self.h())) }
-                    0x55 => { unborrow!(self.ld_d(self.l())) }
+                    0x57 => unborrow!(self.ld_d(self.a())),
+                    0x50 => unborrow!(self.ld_d(self.b())),
+                    0x51 => unborrow!(self.ld_d(self.c())),
+                    0x52 => unborrow!(self.ld_d(self.d())),
+                    0x53 => unborrow!(self.ld_d(self.e())),
+                    0x54 => unborrow!(self.ld_d(self.h())),
+                    0x55 => unborrow!(self.ld_d(self.l())),
 
-                    0x5F => { unborrow!(self.ld_e(self.a())) }
-                    0x58 => { unborrow!(self.ld_e(self.b())) }
-                    0x59 => { unborrow!(self.ld_e(self.c())) }
-                    0x5A => { unborrow!(self.ld_e(self.d())) }
-                    0x5B => { unborrow!(self.ld_e(self.e())) }
-                    0x5C => { unborrow!(self.ld_e(self.h())) }
-                    0x5D => { unborrow!(self.ld_e(self.l())) }
+                    0x5F => unborrow!(self.ld_e(self.a())),
+                    0x58 => unborrow!(self.ld_e(self.b())),
+                    0x59 => unborrow!(self.ld_e(self.c())),
+                    0x5A => unborrow!(self.ld_e(self.d())),
+                    0x5B => unborrow!(self.ld_e(self.e())),
+                    0x5C => unborrow!(self.ld_e(self.h())),
+                    0x5D => unborrow!(self.ld_e(self.l())),
 
-                    0x67 => { unborrow!(self.ld_h(self.a())) }
-                    0x60 => { unborrow!(self.ld_h(self.b())) }
-                    0x61 => { unborrow!(self.ld_h(self.c())) }
-                    0x62 => { unborrow!(self.ld_h(self.d())) }
-                    0x63 => { unborrow!(self.ld_h(self.e())) }
-                    0x64 => { unborrow!(self.ld_h(self.h())) }
-                    0x65 => { unborrow!(self.ld_h(self.l())) }
+                    0x67 => unborrow!(self.ld_h(self.a())),
+                    0x60 => unborrow!(self.ld_h(self.b())),
+                    0x61 => unborrow!(self.ld_h(self.c())),
+                    0x62 => unborrow!(self.ld_h(self.d())),
+                    0x63 => unborrow!(self.ld_h(self.e())),
+                    0x64 => unborrow!(self.ld_h(self.h())),
+                    0x65 => unborrow!(self.ld_h(self.l())),
 
-                    0x6F => { unborrow!(self.ld_l(self.a())) }
-                    0x68 => { unborrow!(self.ld_l(self.b())) }
-                    0x69 => { unborrow!(self.ld_l(self.c())) }
-                    0x6A => { unborrow!(self.ld_l(self.d())) }
-                    0x6B => { unborrow!(self.ld_l(self.e())) }
-                    0x6C => { unborrow!(self.ld_l(self.h())) }
-                    0x6D => { unborrow!(self.ld_l(self.l())) }
+                    0x6F => unborrow!(self.ld_l(self.a())),
+                    0x68 => unborrow!(self.ld_l(self.b())),
+                    0x69 => unborrow!(self.ld_l(self.c())),
+                    0x6A => unborrow!(self.ld_l(self.d())),
+                    0x6B => unborrow!(self.ld_l(self.e())),
+                    0x6C => unborrow!(self.ld_l(self.h())),
+                    0x6D => unborrow!(self.ld_l(self.l())),
 
-                    0x1A => { self.ld_a_de() }
+                    0x1A => self.ld_a_de(),
 
-                    0x3E => { self.ld_a_d8() }
-                    0x06 => { self.ld_b_d8() }
-                    0x0E => { self.ld_c_d8() }
-                    0x16 => { self.ld_d_d8() }
-                    0x1E => { self.ld_e_d8() }
-                    0x26 => { self.ld_h_d8() }
-                    0x2E => { self.ld_l_d8() }
+                    0x3E => self.ld_a_d8(),
+                    0x06 => self.ld_b_d8(),
+                    0x0E => self.ld_c_d8(),
+                    0x16 => self.ld_d_d8(),
+                    0x1E => self.ld_e_d8(),
+                    0x26 => self.ld_h_d8(),
+                    0x2E => self.ld_l_d8(),
 
-                    0x77 => { self.ld_hl_a() }
+                    0x77 => self.ld_hl_a(),
 
-                    0x11 => { self.ld_de_d16() }
-                    0x21 => { self.ld_hl_d16() }
-                    0x31 => { self.ld_sp_d16() }
+                    0x11 => self.ld_de_d16(),
+                    0x21 => self.ld_hl_d16(),
+                    0x31 => self.ld_sp_d16(),
 
-                    0x22 => { self.ldi_hl_a() }
+                    0x22 => self.ldi_hl_a(),
 
-                    0x32 => { self.ldd_hl_a() }
+                    0x32 => self.ldd_hl_a(),
 
-                    0xE0 => { self.ldh_a8_a() }
-                    0xF0 => { self.ldh_a_a8() }
+                    0xE0 => self.ldh_a8_a(),
+                    0xF0 => self.ldh_a_a8(),
 
-                    0xE2 => { self.ldr_c_a() }
-                    0xEA => { self.ld_a16_a() }
+                    0xE2 => self.ldr_c_a(),
+                    0xEA => self.ld_a16_a(),
                     _ => {
                         println!("unrecognized opcode {:0>2X}", opcode);
-                        self.screen.debug(&self.memory);
                         0
                     }
                 }
@@ -276,13 +292,15 @@ impl Cpu {
         }
     }
 
-    pub fn get(&self, flag: Flag) -> bool { self.reg_f & flag.to_u8() != 0 }
+    pub fn get(&self, flag: Flag) -> bool {
+        self.reg_f & flag.to_u8() != 0
+    }
 
     pub fn set(&mut self, flag: Flag, set: bool) {
         if set {
             self.reg_f |= flag.to_u8();
         } else {
-            self.reg_f &= ! flag.to_u8();
+            self.reg_f &= !flag.to_u8();
         }
     }
 
@@ -307,7 +325,8 @@ impl Cpu {
 
     fn push_bc(&mut self) -> u16 {
         let size = 1;
-        self.print_disassembly(format!("PUSH BC ${:0>2X}{:0>2X}", self.reg_b, self.reg_c), size);
+        self.print_disassembly(format!("PUSH BC ${:0>2X}{:0>2X}", self.reg_b, self.reg_c),
+                               size);
         self.sp -= 1;
         self.memory[self.sp] = self.reg_b;
         self.sp -= 1;
@@ -371,13 +390,27 @@ impl Cpu {
         size
     }
 
-    fn a(&self) -> u8 { self.reg_a }
-    fn b(&self) -> u8 { self.reg_b }
-    fn c(&self) -> u8 { self.reg_c }
-    fn d(&self) -> u8 { self.reg_d }
-    fn e(&self) -> u8 { self.reg_e }
-    fn h(&self) -> u8 { self.reg_h }
-    fn l(&self) -> u8 { self.reg_l }
+    fn a(&self) -> u8 {
+        self.reg_a
+    }
+    fn b(&self) -> u8 {
+        self.reg_b
+    }
+    fn c(&self) -> u8 {
+        self.reg_c
+    }
+    fn d(&self) -> u8 {
+        self.reg_d
+    }
+    fn e(&self) -> u8 {
+        self.reg_e
+    }
+    fn h(&self) -> u8 {
+        self.reg_h
+    }
+    fn l(&self) -> u8 {
+        self.reg_l
+    }
 
     fn ld_a(&mut self, value: u8) -> u16 {
         let size = 1;
@@ -436,10 +469,11 @@ impl Cpu {
         let return_address_high = (return_address >> 8) as u8 & 0xFF;
         let return_address_low = (return_address >> 0) as u8 & 0xFF;
 
-        self.print_disassembly(format!(
-            "CALL ${:0>4X} (from {:0>2X}{:0>2X})",
-            address, return_address_high, return_address_low
-        ), size);
+        self.print_disassembly(format!("CALL ${:0>4X} (from {:0>2X}{:0>2X})",
+                                       address,
+                                       return_address_high,
+                                       return_address_low),
+                               size);
 
         self.memory[self.sp] = return_address_low;
         self.sp -= 1;
@@ -462,7 +496,8 @@ impl Cpu {
         let size = 3;
         self.reg_d = self.memory[self.pc + 2];
         self.reg_e = self.memory[self.pc + 1];
-        self.print_disassembly(format!("LD DE,${:0>2X}{:0>2X}", self.reg_d, self.reg_e), size);
+        self.print_disassembly(format!("LD DE,${:0>2X}{:0>2X}", self.reg_d, self.reg_e),
+                               size);
         size
     }
 
@@ -526,14 +561,15 @@ impl Cpu {
     fn ldr_c_a(&mut self) -> u16 {
         let size = 1;
         let address = 0xFF00 + self.reg_c as u16;
-        self.print_disassembly(format!("LD +${:0>2X}, {:0>2X}", self.reg_c, self.reg_a), size);
+        self.print_disassembly(format!("LD +${:0>2X}, {:0>2X}", self.reg_c, self.reg_a),
+                               size);
         self.memory[address] = self.reg_a;
         size
     }
 
     fn ld_a16_a(&mut self) -> u16 {
         let size = 3;
-        let address = self.read_word(self.pc+1);
+        let address = self.read_word(self.pc + 1);
         self.print_disassembly(format!("LD ${:0>4X}, {:0>2X}", address, self.reg_a), size);
         self.memory[address] = self.reg_a;
         size
@@ -544,20 +580,24 @@ impl Cpu {
         for &byte in &self.memory[self.pc..self.pc + num_bytes] {
             write!(&mut s, "0x{:0>2X} ", byte).unwrap();
         }
-        println!("[0x{:0>8X}] {:<15} {:<32} {:>16X}", self.pc, s, instruction, self.operations)
+        println!("[0x{:0>8X}] {:<15} {:<32} {:>16X}",
+                 self.pc,
+                 s,
+                 instruction,
+                 self.operations)
     }
 
     // OPERATIONS START HERE
 
     fn ret(&mut self) -> u16 {
-        let addr_h = self.memory[self.sp+1];
-        let addr_l = self.memory[self.sp+2];
+        let addr_h = self.memory[self.sp + 1];
+        let addr_l = self.memory[self.sp + 2];
         let return_address = (addr_h as u16) << 8 | addr_l as u16;
         self.print_disassembly(format!("RET ({:0>4X})", return_address), 1);
 
         self.pc = return_address;
 
-         // move back "up" the stack, zeroing out
+        // move back "up" the stack, zeroing out
         self.sp += 1;
         self.sp = 0x00;
         self.sp += 1;
@@ -566,9 +606,9 @@ impl Cpu {
         0
     }
 
-    /* when we jump to a new address, make sure to save the current program counter
-     * address to the bottom of the stack, so when we can return to the current address
-     */
+    // when we jump to a new address, make sure to save the current program counter
+    // address to the bottom of the stack, so when we can return to the current address
+    //
     fn jmp_a16(&mut self) -> u16 {
         let address = self.read_word(self.pc + 1);
         self.print_disassembly(format!("JMP {:0>4X}", address), 3);
@@ -578,9 +618,10 @@ impl Cpu {
 
     fn ld_hl_d16(&mut self) -> u16 {
         let size = 3;
-        self.reg_l = self.memory[self.pc+1];
-        self.reg_h = self.memory[self.pc+2];
-        self.print_disassembly(format!("LD HL,${:0>2X}{:0>2X}", self.reg_h, self.reg_l), size);
+        self.reg_l = self.memory[self.pc + 1];
+        self.reg_h = self.memory[self.pc + 2];
+        self.print_disassembly(format!("LD HL,${:0>2X}{:0>2X}", self.reg_h, self.reg_l),
+                               size);
         size
     }
 
@@ -602,7 +643,11 @@ impl Cpu {
 
     fn ldi_hl_a(&mut self) -> u16 {
         let size = 1;
-        self.print_disassembly(format!("LD (HL+) ({:0>2X}{:0>2X}), {:?}", self.reg_h, self.reg_l, self.reg_a), size);
+        self.print_disassembly(format!("LD (HL+) ({:0>2X}{:0>2X}), {:?}",
+                                       self.reg_h,
+                                       self.reg_l,
+                                       self.reg_a),
+                               size);
         let address = self.hl();
         self.memory[address] = self.reg_a;
         self.store_hl(address.wrapping_add(1));
@@ -621,7 +666,11 @@ impl Cpu {
 
     fn ldd_hl_a(&mut self) -> u16 {
         let size = 1;
-        self.print_disassembly(format!("LD (HL-) ({:0>2X}{:0>2X}), {:?}", self.reg_h, self.reg_l, self.reg_a), size);
+        self.print_disassembly(format!("LD (HL-) ({:0>2X}{:0>2X}), {:?}",
+                                       self.reg_h,
+                                       self.reg_l,
+                                       self.reg_a),
+                               size);
 
         let address = self.hl();
         self.memory[address] = self.reg_a;
@@ -640,7 +689,8 @@ impl Cpu {
         let size = 2;
         let offset = self.memory[self.pc + 1] as i8;
         let address = self.pc.wrapping_add(offset as u16);
-        self.print_disassembly(format!("JR $+{:0>2X} ; 0x{:0>4X}", offset, address + 1), size);
+        self.print_disassembly(format!("JR $+{:0>2X} ; 0x{:0>4X}", offset, address + 1),
+                               size);
 
         self.pc = address;
         size
@@ -650,8 +700,13 @@ impl Cpu {
         let size = 2;
         let offset = self.memory[self.pc + 1] as i8;
         let address = self.pc.wrapping_add(offset as u16);
-        let n = if zero { "" } else { "N" };
-        self.print_disassembly(format!("JR {}Z, $+{:0>2X} ; 0x{:0>4X}", n, offset, address + 1), size);
+        let n = if zero {
+            ""
+        } else {
+            "N"
+        };
+        self.print_disassembly(format!("JR {}Z, $+{:0>2X} ; 0x{:0>4X}", n, offset, address + 1),
+                               size);
 
         if self.get(flag) == zero {
             self.pc = address;
@@ -662,7 +717,7 @@ impl Cpu {
     fn bit_h(&mut self, bit: u8) -> u16 {
         let size = 1;
         let h = self.reg_h;
-        self.set(Flag::ZERO, h & (1<<bit) == 0);
+        self.set(Flag::ZERO, h & (1 << bit) == 0);
         self.set(Flag::SUBTRACT, false);
         self.set(Flag::HALFCARRY, true);
 
@@ -678,7 +733,7 @@ impl Cpu {
         size
     }
 
-    fn ldh_a_a8(&mut self) -> u16{
+    fn ldh_a_a8(&mut self) -> u16 {
         let size = 2;
         let offset = self.memory[self.pc + 1];
         self.print_disassembly(format!("LDH A, (${:0>2X})", offset), size);
@@ -689,7 +744,7 @@ impl Cpu {
         size
     }
 
-    fn ldh_a8_a(&mut self) -> u16{
+    fn ldh_a8_a(&mut self) -> u16 {
         let size = 2;
         let offset = self.memory[self.pc + 1];
         self.print_disassembly(format!("LDH (${:0>2X}), A", offset), size);
@@ -849,8 +904,8 @@ impl Cpu {
         self.set(Flag::SUBTRACT, true);
         self.set(Flag::HALFCARRY, (a << 4) < (value << 4));
         self.set(Flag::CARRY, a < value);
-        if value==0x90 {
-            self.crash(format!("HEY WAT IS GOING ON"))
+        if value == 0x90 {
+            self.screen.update(&self.memory);
         }
         size
     }
@@ -859,19 +914,31 @@ impl Cpu {
 impl fmt::Display for Cpu {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         try!(writeln!(f,
-            "cpu {{\
-            \n\tpc: {pc:0>4X} [{i0:0>2X} {i1:0>2X} {i2:0>2X} {i3:0>2X}]\
-            \n\tsp: {sp:0>4X}\
-            \n\tregisters: {{ a: {a:0>2X}, f: {f:0>2X}, b: {b:0>2X}, c: {c:0>2X}, d: {d:0>2X}, e: {e:0>2X}, h: {h:0>2X}, l: {l:0>2X} }}\
-            \n\tflags: {{ zero: {zero}, sub: {sub}, half: {half}, carry: {carry} }}
+                      "cpu {{\n\tpc: {pc:0>4X} [{i0:0>2X} {i1:0>2X} {i2:0>2X} {i3:0>2X}]\n\tsp: \
+                       {sp:0>4X}\n\tregisters: {{ a: {a:0>2X}, f: {f:0>2X}, b: {b:0>2X}, c: \
+                       {c:0>2X}, d: {d:0>2X}, e: {e:0>2X}, h: {h:0>2X}, l: {l:0>2X} \
+                       }}\n\tflags: {{ zero: {zero}, sub: {sub}, half: {half}, carry: {carry} \
+                       }}
             \n}}
             ",
-                pc=self.pc, i0=self.memory[self.pc+0], i1=self.memory[self.pc+1], i2=self.memory[self.pc+2], i3=self.memory[self.pc+3],
-                sp=self.sp,
-                a=self.reg_a, f=self.reg_f, b=self.reg_b, c=self.reg_c, d=self.reg_d, e=self.reg_e, h=self.reg_h, l=self.reg_l,
-                zero=self.get(Flag::ZERO), sub=self.get(Flag::SUBTRACT), half=self.get(Flag::HALFCARRY), carry=self.get(Flag::CARRY)
-
-        ));
+                      pc = self.pc,
+                      i0 = self.memory[self.pc + 0],
+                      i1 = self.memory[self.pc + 1],
+                      i2 = self.memory[self.pc + 2],
+                      i3 = self.memory[self.pc + 3],
+                      sp = self.sp,
+                      a = self.reg_a,
+                      f = self.reg_f,
+                      b = self.reg_b,
+                      c = self.reg_c,
+                      d = self.reg_d,
+                      e = self.reg_e,
+                      h = self.reg_h,
+                      l = self.reg_l,
+                      zero = self.get(Flag::ZERO),
+                      sub = self.get(Flag::SUBTRACT),
+                      half = self.get(Flag::HALFCARRY),
+                      carry = self.get(Flag::CARRY)));
 
         self.print_stack_and_vram(8);
         Ok(())

@@ -1,10 +1,10 @@
 use gameboy;
 use cart;
-const WRAM_SIZE: usize = 0xDFFF-0xC000 + 1;
-const VRAM_SIZE: usize = 0x9FFF-0x8000 + 1;
-const XRAM_SIZE: usize = 0xBFFF-0xA000 + 1;
-const HRAM_SIZE: usize = 0xFFFE-0xFF80 + 1;
-const IO_SIZE: usize = 0xFF7F-0xFF01 + 1;
+const WRAM_SIZE: usize = 0xDFFF - 0xC000 + 1;
+const VRAM_SIZE: usize = 0x9FFF - 0x8000 + 1;
+const XRAM_SIZE: usize = 0xBFFF - 0xA000 + 1;
+const HRAM_SIZE: usize = 0xFFFE - 0xFF80 + 1;
+const IO_SIZE: usize = 0xFF7F - 0xFF01 + 1;
 
 use std::ops::{Index, IndexMut, Range};
 
@@ -19,7 +19,7 @@ pub struct Memory {
     io: [u8; IO_SIZE],
     hram: [u8; HRAM_SIZE],
     interrupt: [u8; 1],
-    zero: [u8; 1]
+    zero: [u8; 1],
 }
 
 impl Memory {
@@ -35,7 +35,7 @@ impl Memory {
             io: [0; IO_SIZE],
             hram: [0; HRAM_SIZE],
             interrupt: [0],
-            zero: [0]
+            zero: [0],
         }
     }
 }
@@ -47,7 +47,7 @@ impl Index<u16> for Memory {
         match index {
             0xFF00 => &self.input[0],
             0xFFFF => &self.interrupt[0],
-            _ => &self[index..index+1][0]
+            _ => &self[index..index + 1][0],
         }
     }
 }
@@ -56,7 +56,7 @@ impl Index<usize> for Memory {
     type Output = u8;
 
     fn index(&self, index: usize) -> &Self::Output {
-        &self[index..index+1][0]
+        &self[index..index + 1][0]
     }
 }
 
@@ -79,7 +79,7 @@ impl IndexMut<usize> for Memory {
             0xFF01...0xFF7F => &mut self.io[index - 0xFF01],
             0xFF80...0xFFFE => &mut self.hram[index - 0xFF80],
             0xFFFF => &mut self.interrupt[index - 0xFFFF],
-            _ => panic!("Address {:0>2X} has no known mapping!", index)
+            _ => panic!("Address {:0>2X} has no known mapping!", index),
         }
     }
 }
@@ -102,18 +102,38 @@ impl Index<Range<usize>> for Memory {
         };
 
         match (range.start, end) {
-            (0x0000...0x00FF, 0x0000...0x00FF) => &self.boot[(range.start - 0x0000)..(range.end - 0x0000)],
-            (0x0100...0x7FFF, 0x0100...0x7FFF) => &self.cart[(range.start - 0x0100)..(range.end - 0x0100)],
-            (0x8000...0x9FFF, 0x8000...0x9FFF) => &self.vram[(range.start - 0x8000)..(range.end - 0x8000)],
-            (0xA000...0xBFFF, 0xA000...0xBFFF) => &self.xram[(range.start - 0xA000)..(range.end - 0xA000)],
-            (0xC000...0xDFFF, 0xC000...0xDFFF) => &self.wram[(range.start - 0xC000)..(range.end - 0xC000)],
-            (0xE000...0xFDFF, 0xE000...0xFDFF) => &self.wram[(range.start - 0xE000)..(range.end - 0xE000)],
+            (0x0000...0x00FF, 0x0000...0x00FF) => {
+                &self.boot[(range.start - 0x0000)..(range.end - 0x0000)]
+            }
+            (0x0100...0x7FFF, 0x0100...0x7FFF) => {
+                &self.cart[(range.start - 0x0100)..(range.end - 0x0100)]
+            }
+            (0x8000...0x9FFF, 0x8000...0x9FFF) => {
+                &self.vram[(range.start - 0x8000)..(range.end - 0x8000)]
+            }
+            (0xA000...0xBFFF, 0xA000...0xBFFF) => {
+                &self.xram[(range.start - 0xA000)..(range.end - 0xA000)]
+            }
+            (0xC000...0xDFFF, 0xC000...0xDFFF) => {
+                &self.wram[(range.start - 0xC000)..(range.end - 0xC000)]
+            }
+            (0xE000...0xFDFF, 0xE000...0xFDFF) => {
+                &self.wram[(range.start - 0xE000)..(range.end - 0xE000)]
+            }
             (0xFE00...0xFEFF, 0xFE00...0xFEFF) => &self.zero[..],
             (0xFF00, 0xFF00) => &self.input[..],
-            (0xFF01...0xFF7F, 0xFF01...0xFF7F) => &self.io[(range.start - 0xFF01)..(range.end - 0xFF01)],
-            (0xFF80...0xFFFF, 0xFF80...0xFFFE) => &self.hram[(range.start - 0xFF80)..(range.end - 0xFF80)],
+            (0xFF01...0xFF7F, 0xFF01...0xFF7F) => {
+                &self.io[(range.start - 0xFF01)..(range.end - 0xFF01)]
+            }
+            (0xFF80...0xFFFF, 0xFF80...0xFFFE) => {
+                &self.hram[(range.start - 0xFF80)..(range.end - 0xFF80)]
+            }
             (0xFFFF, 0x0000) => &self.interrupt[..],
-            _ => panic!("Address {:0>4X}..{:0>4X} has no known mapping!", range.start, end)
+            _ => {
+                panic!("Address {:0>4X}..{:0>4X} has no known mapping!",
+                       range.start,
+                       end)
+            }
         }
     }
 }

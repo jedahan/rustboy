@@ -1,23 +1,28 @@
 use std::fmt;
+use std::env;
 
 use cpu;
 use cart;
 use memory;
 use debug;
+use lcd;
+use window;
 
 pub const BOOTROM_SIZE: usize = 256;
 
 pub struct GameBoy {
-    cpu: cpu::Cpu
+    cpu: cpu::Cpu,
 }
 
 impl GameBoy {
     pub fn new(boot: [u8; BOOTROM_SIZE], cart: cart::Cart) -> GameBoy {
         let memory = memory::Memory::new(boot, cart);
-        let screen = debug::Screen::new(160,144);
-        GameBoy {
-            cpu: cpu::Cpu::new(memory, screen)
-        }
+        let screen: Box<window::Drawable> = match env::var("DEBUG") {
+            Ok(_) => Box::new(debug::DebugScreen::new(160, 288)),
+            _ => Box::new(lcd::LcdScreen::new(160, 144)),
+        };
+
+        GameBoy { cpu: cpu::Cpu::new(memory, screen) }
     }
 
     pub fn run(&mut self) {
