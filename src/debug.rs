@@ -31,34 +31,23 @@ impl DebugScreen {
 
 impl window::Drawable for DebugScreen {
     fn update(&mut self, memory: &memory::Memory) {
-        let frame_duration = Duration::from_millis(16);
-        let mut previous_draw = Instant::now();
+        if self.window.is_open() {
+            self.window.get_scroll_wheel().map(|scroll| {
+                let width = self.window.get_size().0 as u16 / 4;
+                self.scroll = self.scroll.wrapping_sub(width * scroll.1 as u16);
+            });
 
-        self.draw(memory);
-        while self.window.is_open() && !self.window.is_key_down(Key::Escape) {
-            let now = Instant::now();
-            if now - previous_draw > frame_duration {
-                self.draw(memory);
-
-                self.window.get_scroll_wheel().map(|scroll| {
-                    let width = self.window.get_size().0 as u16 / 4;
-                    self.scroll = self.scroll.wrapping_sub(width * scroll.1 as u16);
-                });
-
-                self.window.get_mouse_pos(MouseMode::Clamp).map(|mouse| {
-                    let width = self.window.get_size().0 as u16 / 4;
-                    let x = mouse.0 as u16;
-                    let y = mouse.1 as u16;
-                    let offset = self.scroll - (y * width + x);
-                    let s = format!("0x{:0>4X}: {:0>4X}: {:0>2X}",
-                                    self.scroll,
-                                    offset,
-                                    memory[offset]);
-                    self.window.set_title(&s);
-                });
-
-                previous_draw = now;
-            }
+            self.window.get_mouse_pos(MouseMode::Clamp).map(|mouse| {
+                let width = self.window.get_size().0 as u16 / 4;
+                let x = mouse.0 as u16;
+                let y = mouse.1 as u16;
+                let offset = self.scroll - (y * width + x);
+                let s = format!("0x{:0>4X}: {:0>4X}: {:0>2X}",
+                                self.scroll,
+                                offset,
+                                memory[offset]);
+                self.window.set_title(&s);
+            });
         }
     }
 
