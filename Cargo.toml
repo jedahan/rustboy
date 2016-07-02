@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Jonathan Dahan <jonathan@jonathan.is>"]
 
 [dependencies]
-minifb = { git = "https://github.com/jedahan/rust_minifb.git" }
+minifb = "0.8.0"
 unborrow = "0.1.0"
 
 [profile.release]
