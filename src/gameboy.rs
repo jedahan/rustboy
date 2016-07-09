@@ -1,5 +1,7 @@
 use std::fmt;
 use std::env;
+use std::thread;
+use std::sync::Arc;
 
 use cpu;
 use cart;
@@ -16,13 +18,17 @@ pub struct GameBoy {
 
 impl GameBoy {
     pub fn new(boot: [u8; BOOTROM_SIZE], cart: cart::Cart) -> GameBoy {
-        let memory = memory::Memory::new(boot, cart);
-        let screen: Box<window::Drawable> = match env::var("DEBUG") {
-            Ok(_) => Box::new(debug::DebugScreen::new(160, 288)),
-            _ => Box::new(lcd::LcdScreen::new(160, 144)),
-        };
+        let memory = Arc::new(memory::Memory::new(boot, cart));
 
-        GameBoy { cpu: cpu::Cpu::new(memory, screen) }
+        let memory_ref = memory.clone();
+
+        let screen_thread = thread::spawn(move || {
+            let _: Box<window::Drawable> = match env::var("DEBUG") {
+                Ok(_) => Box::new(debug::DebugScreen::new(160, 288, memory_ref)),
+                _ => Box::new(lcd::LcdScreen::new(160, 144, memory_ref)),
+            };
+        });
+        GameBoy { cpu: cpu::Cpu::new(memory) }
     }
 
     pub fn run(&mut self) {

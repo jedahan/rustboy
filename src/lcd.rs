@@ -1,7 +1,10 @@
 extern crate minifb;
 
 use std::ops::Range;
+use std::thread;
+use std::sync::Arc;
 use self::minifb::WindowOptions;
+use std::time::{Duration, Instant};
 use window;
 use memory;
 
@@ -29,17 +32,19 @@ pub struct LcdScreen {
     scroll: u16,
     control: u8,
     buffer: Vec<u32>,
+    memory: Arc<memory::Memory>,
     window: minifb::Window,
 }
 
 impl LcdScreen {
-    pub fn new(width: usize, height: usize) -> Self {
+    pub fn new(width: usize, height: usize, memory: Arc<memory::Memory>) -> Self {
         LcdScreen {
             mode: Mode::Hblank,
             modeclock: 0,
             line: 0,
             scroll: 0x0000,
             control: 0,
+            memory: memory,
             buffer: vec![0; width * height],
             window: minifb::Window::new("rustboy",
                                         width,
@@ -115,7 +120,7 @@ impl LcdScreen {
 }
 
 impl window::Drawable for LcdScreen {
-    fn update(&mut self, buffer: &memory::Memory) {
+    fn update(&mut self) {
         if self.enable() {
             match self.mode {
                 Mode::Hblank => {
@@ -125,7 +130,7 @@ impl window::Drawable for LcdScreen {
 
                         if self.line as u16 == LINES_BEFORE_VBLANK {
                             self.mode = Mode::Vblank;
-                            self.draw(buffer);
+                            self.draw();
                         }
                     }
                 }
@@ -155,11 +160,24 @@ impl window::Drawable for LcdScreen {
         }
     }
 
-    fn draw(&mut self, buffer: &memory::Memory) {
+    fn draw(&mut self) {
         for i in self.buffer.iter_mut() {
             let gray = 6 as u32;
             *i = gray << 16 | gray << 8 | gray;
         }
         self.window.update_with_buffer(&self.buffer);
+    }
+
+    fn run(&mut self) {
+        let frame_duration = Duration::from_millis(16);
+        let mut previous_draw = Instant::now();
+
+        self.update();
+
+        let now = Instant::now();
+        if now - previous_draw > frame_duration {
+            self.draw();
+            previous_draw = now;
+        }
     }
 }

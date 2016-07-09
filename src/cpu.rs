@@ -1,4 +1,6 @@
 use std::fmt;
+use std::thread;
+use std::sync::Arc;
 
 use window;
 use memory;
@@ -30,8 +32,7 @@ pub struct Cpu {
     reg_e: u8,
     reg_h: u8,
     reg_l: u8,
-    memory: memory::Memory,
-    screen: Box<window::Drawable>,
+    memory: Arc<memory::Memory>,
     operations: usize,
     debug: bool,
 }
@@ -64,7 +65,7 @@ impl Cpu {
         panic!(message);
     }
 
-    pub fn new(memory: memory::Memory, screen: Box<window::Drawable>) -> Cpu {
+    pub fn new(memory: Arc<memory::Memory>) -> Cpu {
         let debug = match env::var("DEBUG") {
             Ok(_) => true,
             _ => false,
@@ -80,8 +81,6 @@ impl Cpu {
             reg_e: 0,
             reg_h: 0,
             reg_l: 0,
-
-            screen: screen,
 
             operations: 0,
             debug: debug,
@@ -109,23 +108,12 @@ impl Cpu {
     }
 
     pub fn run(&mut self) {
-        let frame_duration = Duration::from_millis(16);
-        let mut previous_draw = Instant::now();
-
         println!("rustboy is running");
         loop {
             let instruction = self.fetch();
             let advance = self.execute(instruction);
             self.pc += advance;
             self.operations += 1;
-            self.screen.update(&self.memory);
-
-            let now = Instant::now();
-            if now - previous_draw > frame_duration {
-                self.screen.draw(&self.memory);
-                previous_draw = now;
-            }
-
             if self.debug {
                 println!("{:0>4X}: {}", self.operations, self);
             }
@@ -1051,9 +1039,6 @@ impl Cpu {
         self.set(Flag::SUBTRACT, true);
         self.set(Flag::HALFCARRY, (a << 4) < (value << 4));
         self.set(Flag::CARRY, a < value);
-        if value == 0x90 {
-            self.screen.update(&self.memory);
-        }
         size
     }
 }
