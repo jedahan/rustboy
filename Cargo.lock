@@ -1,9 +1,8 @@
 [root]
 name = "rustboy"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
- "minifb 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "unborrow 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "minifb 0.8.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -57,7 +56,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "minifb"
-version = "0.8.0"
+version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "gcc 0.3.28 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -78,11 +77,6 @@ dependencies = [
  "libc 0.2.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "winapi 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
-
-[[package]]
-name = "unborrow"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "user32-sys"

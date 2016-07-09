@@ -202,61 +202,208 @@ impl Cpu {
                     0xE1 => self.pop_hl(),
 
                     // loading
-                    0x7F => unborrow!(self.ld_a(self.a())),
-                    0x78 => unborrow!(self.ld_a(self.b())),
-                    0x79 => unborrow!(self.ld_a(self.c())),
-                    0x7A => unborrow!(self.ld_a(self.d())),
-                    0x7B => unborrow!(self.ld_a(self.e())),
-                    0x7C => unborrow!(self.ld_a(self.h())),
-                    0x7D => unborrow!(self.ld_a(self.l())),
+                    0x7F => {
+                        let a = self.a();
+                        self.ld_a(a)
+                    }
+                    0x78 => {
+                        let b = self.b();
+                        self.ld_a(b)
+                    }
+                    0x79 => {
+                        let c = self.c();
+                        self.ld_a(c)
+                    }
+                    0x7A => {
+                        let d = self.d();
+                        self.ld_a(d)
+                    }
+                    0x7B => {
+                        let e = self.e();
+                        self.ld_a(e)
+                    }
+                    0x7C => {
+                        let h = self.h();
+                        self.ld_a(h)
+                    }
+                    0x7D => {
+                        let l = self.l();
+                        self.ld_a(l)
+                    }
 
-                    0x47 => unborrow!(self.ld_b(self.a())),
-                    0x40 => unborrow!(self.ld_b(self.b())),
-                    0x41 => unborrow!(self.ld_b(self.c())),
-                    0x42 => unborrow!(self.ld_b(self.d())),
-                    0x43 => unborrow!(self.ld_b(self.e())),
-                    0x44 => unborrow!(self.ld_b(self.h())),
-                    0x45 => unborrow!(self.ld_b(self.l())),
+                    0x47 => {
+                        let a = self.a();
+                        self.ld_b(a)
+                    }
+                    0x40 => {
+                        let b = self.b();
+                        self.ld_b(b)
+                    }
+                    0x41 => {
+                        let c = self.c();
+                        self.ld_b(c)
+                    }
+                    0x42 => {
+                        let d = self.d();
+                        self.ld_b(d)
+                    }
+                    0x43 => {
+                        let e = self.e();
+                        self.ld_b(e)
+                    }
+                    0x44 => {
+                        let h = self.h();
+                        self.ld_b(h)
+                    }
+                    0x45 => {
+                        let l = self.l();
+                        self.ld_b(l)
+                    }
 
-                    0x4F => unborrow!(self.ld_c(self.a())),
-                    0x48 => unborrow!(self.ld_c(self.b())),
-                    0x49 => unborrow!(self.ld_c(self.c())),
-                    0x4A => unborrow!(self.ld_c(self.d())),
-                    0x4B => unborrow!(self.ld_c(self.e())),
-                    0x4C => unborrow!(self.ld_c(self.h())),
-                    0x4D => unborrow!(self.ld_c(self.l())),
+                    0x4F => {
+                        let a = self.a();
+                        self.ld_c(a)
+                    }
+                    0x48 => {
+                        let b = self.b();
+                        self.ld_c(b)
+                    }
+                    0x49 => {
+                        let c = self.c();
+                        self.ld_c(c)
+                    }
+                    0x4A => {
+                        let d = self.d();
+                        self.ld_c(d)
+                    }
+                    0x4B => {
+                        let e = self.e();
+                        self.ld_c(e)
+                    }
+                    0x4C => {
+                        let h = self.h();
+                        self.ld_c(h)
+                    }
+                    0x4D => {
+                        let l = self.l();
+                        self.ld_c(l)
+                    }
 
-                    0x57 => unborrow!(self.ld_d(self.a())),
-                    0x50 => unborrow!(self.ld_d(self.b())),
-                    0x51 => unborrow!(self.ld_d(self.c())),
-                    0x52 => unborrow!(self.ld_d(self.d())),
-                    0x53 => unborrow!(self.ld_d(self.e())),
-                    0x54 => unborrow!(self.ld_d(self.h())),
-                    0x55 => unborrow!(self.ld_d(self.l())),
+                    0x57 => {
+                        let a = self.a();
+                        self.ld_d(a)
+                    }
+                    0x50 => {
+                        let b = self.b();
+                        self.ld_d(b)
+                    }
+                    0x51 => {
+                        let c = self.c();
+                        self.ld_d(c)
+                    }
+                    0x52 => {
+                        let d = self.d();
+                        self.ld_d(d)
+                    }
+                    0x53 => {
+                        let e = self.e();
+                        self.ld_d(e)
+                    }
+                    0x54 => {
+                        let h = self.h();
+                        self.ld_d(h)
+                    }
+                    0x55 => {
+                        let l = self.l();
+                        self.ld_d(l)
+                    }
 
-                    0x5F => unborrow!(self.ld_e(self.a())),
-                    0x58 => unborrow!(self.ld_e(self.b())),
-                    0x59 => unborrow!(self.ld_e(self.c())),
-                    0x5A => unborrow!(self.ld_e(self.d())),
-                    0x5B => unborrow!(self.ld_e(self.e())),
-                    0x5C => unborrow!(self.ld_e(self.h())),
-                    0x5D => unborrow!(self.ld_e(self.l())),
+                    0x5F => {
+                        let a = self.a();
+                        self.ld_e(a)
+                    }
+                    0x58 => {
+                        let b = self.b();
+                        self.ld_e(b)
+                    }
+                    0x59 => {
+                        let c = self.c();
+                        self.ld_e(c)
+                    }
+                    0x5A => {
+                        let d = self.d();
+                        self.ld_e(d)
+                    }
+                    0x5B => {
+                        let e = self.e();
+                        self.ld_e(e)
+                    }
+                    0x5C => {
+                        let h = self.h();
+                        self.ld_e(h)
+                    }
+                    0x5D => {
+                        let l = self.l();
+                        self.ld_e(l)
+                    }
 
-                    0x67 => unborrow!(self.ld_h(self.a())),
-                    0x60 => unborrow!(self.ld_h(self.b())),
-                    0x61 => unborrow!(self.ld_h(self.c())),
-                    0x62 => unborrow!(self.ld_h(self.d())),
-                    0x63 => unborrow!(self.ld_h(self.e())),
-                    0x64 => unborrow!(self.ld_h(self.h())),
-                    0x65 => unborrow!(self.ld_h(self.l())),
+                    0x67 => {
+                        let a = self.a();
+                        self.ld_h(a)
+                    }
+                    0x60 => {
+                        let b = self.b();
+                        self.ld_h(b)
+                    }
+                    0x61 => {
+                        let c = self.c();
+                        self.ld_h(c)
+                    }
+                    0x62 => {
+                        let d = self.d();
+                        self.ld_h(d)
+                    }
+                    0x63 => {
+                        let e = self.e();
+                        self.ld_h(e)
+                    }
+                    0x64 => {
+                        let h = self.h();
+                        self.ld_h(h)
+                    }
+                    0x65 => {
+                        let l = self.l();
+                        self.ld_h(l)
+                    }
 
-                    0x6F => unborrow!(self.ld_l(self.a())),
-                    0x68 => unborrow!(self.ld_l(self.b())),
-                    0x69 => unborrow!(self.ld_l(self.c())),
-                    0x6A => unborrow!(self.ld_l(self.d())),
-                    0x6B => unborrow!(self.ld_l(self.e())),
-                    0x6C => unborrow!(self.ld_l(self.h())),
-                    0x6D => unborrow!(self.ld_l(self.l())),
+                    0x6F => {
+                        let a = self.a();
+                        self.ld_l(a)
+                    }
+                    0x68 => {
+                        let b = self.b();
+                        self.ld_l(b)
+                    }
+                    0x69 => {
+                        let c = self.c();
+                        self.ld_l(c)
+                    }
+                    0x6A => {
+                        let d = self.d();
+                        self.ld_l(d)
+                    }
+                    0x6B => {
+                        let e = self.e();
+                        self.ld_l(e)
+                    }
+                    0x6C => {
+                        let h = self.h();
+                        self.ld_l(h)
+                    }
+                    0x6D => {
+                        let l = self.l();
+                        self.ld_l(l)
+                    }
 
                     0x1A => self.ld_a_de(),
 
