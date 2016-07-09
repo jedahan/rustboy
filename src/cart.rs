@@ -8,7 +8,7 @@ use header::Header;
 #[derive(Debug)]
 pub struct Cart {
     pub mem: Vec<u8>,
-    pub headers: Vec<header::Header>
+    pub headers: Vec<header::Header>,
 }
 
 impl Cart {
@@ -33,12 +33,12 @@ impl Cart {
                 Header::new("global checksum", 0x14E..0x150),
                 Header::new("short header", 0x134..0x14D),
                 Header::new("full header", 0x100..0x14F),
-            ]
+            ],
         }
     }
 
     fn checksum(&self) -> u8 {
-        self.mem[0x134..0x14D].iter().fold(0, |a: u8, &b| a.wrapping_sub(b+1))
+        self.mem[0x134..0x14D].iter().fold(0, |a: u8, &b| a.wrapping_sub(b + 1))
     }
 
     fn global_checksum(&self) -> u16 {
@@ -53,29 +53,33 @@ impl Cart {
 }
 
 impl fmt::Display for Cart {
- fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 
-     for header in &self.headers {
-         if header.format == "string" {
-             try!(writeln!(f, "{}: {}", header.name, String::from_utf8_lossy(&self.mem[header.range.start..header.range.end])));
-         } else {
-             try!(write!(f, "{}: [", header.name));
-             for byte in &self.mem[header.range.start..header.range.end-1] {
-                 try!(write!(f, "{:0>2X}, ", byte));
-             }
-             try!(writeln!(f, "{:0>2X}]", &self.mem[header.range.end]));
-         }
-     }
+        for header in &self.headers {
+            if header.format == "string" {
+                try!(writeln!(f,
+                              "{}: {}",
+                              header.name,
+                              String::from_utf8_lossy(&self.mem[header.range.start..header.range
+                                  .end])));
+            } else {
+                try!(write!(f, "{}: [", header.name));
+                for byte in &self.mem[header.range.start..header.range.end - 1] {
+                    try!(write!(f, "{:0>2X}, ", byte));
+                }
+                try!(writeln!(f, "{:0>2X}]", &self.mem[header.range.end]));
+            }
+        }
 
-     if self.is_valid() {
-         try!(writeln!(f, "checksum passed!"));
-     } else {
-         try!(writeln!(f, "checksum failed!"));
-     }
+        if self.is_valid() {
+            try!(writeln!(f, "checksum passed!"));
+        } else {
+            try!(writeln!(f, "checksum failed!"));
+        }
 
-     writeln!(f, "global checksum {:X}", self.global_checksum())
+        writeln!(f, "global checksum {:X}", self.global_checksum())
 
- }
+    }
 }
 
 impl Index<u16> for Cart {
@@ -108,7 +112,7 @@ impl IndexMut<usize> for Cart {
 
 impl Index<Range<u16>> for Cart {
     type Output = [u8];
-    fn index(&self, range: Range<u16>) -> &Self::Output{
+    fn index(&self, range: Range<u16>) -> &Self::Output {
         let usize_range = (range.start as usize)..(range.end as usize);
         &self[usize_range]
     }
@@ -116,7 +120,7 @@ impl Index<Range<u16>> for Cart {
 
 impl Index<Range<usize>> for Cart {
     type Output = [u8];
-    fn index(&self, range: Range<usize>) -> &Self::Output{
+    fn index(&self, range: Range<usize>) -> &Self::Output {
         &self.mem[range]
     }
 }

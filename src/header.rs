@@ -16,7 +16,7 @@ impl Header {
         Header {
             name: name,
             range: range,
-            format: format
+            format: format,
         }
     }
 }
