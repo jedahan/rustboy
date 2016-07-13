@@ -1,9 +1,8 @@
 extern crate minifb;
 
-use std::thread;
-use std::sync::RwLock;
+use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
-use self::minifb::{WindowOptions, Key, MouseMode};
+use self::minifb::{WindowOptions, MouseMode};
 use memory;
 use window;
 
@@ -11,11 +10,11 @@ pub struct DebugScreen {
     pub window: minifb::Window,
     pub scroll: u16,
     pub buffer: Vec<u32>,
-    pub memory: memory::Memory,
+    pub memory: Arc<RwLock<memory::Memory>>,
 }
 
 impl DebugScreen {
-    pub fn new(width: usize, height: usize, memory: memory::Memory) -> DebugScreen {
+    pub fn new(width: usize, height: usize, memory: Arc<RwLock<memory::Memory>>) -> DebugScreen {
         DebugScreen {
             buffer: vec![0; width * height],
             memory: memory,
@@ -46,10 +45,11 @@ impl window::Drawable for DebugScreen {
                 let x = mouse.0 as u16;
                 let y = mouse.1 as u16;
                 let offset = self.scroll - (y * width + x);
+                let memory = self.memory.read().unwrap();
                 let s = format!("0x{:0>4X}: {:0>4X}: {:0>2X}",
                                 self.scroll,
                                 offset,
-                                self.memory[offset]);
+                                memory[offset]);
                 self.window.set_title(&s);
             });
         }
@@ -57,10 +57,11 @@ impl window::Drawable for DebugScreen {
 
     fn draw(&mut self) {
         let mut count: u16 = self.scroll;
+        let memory = self.memory.read().unwrap();
 
         // TODO: LOCK HERE?
         for i in self.buffer.iter_mut() {
-            let gray = self.memory[count] as u32;
+            let gray = memory[count] as u32;
             *i = gray << 16 | gray << 8 | gray;
             count -= 1;
         }

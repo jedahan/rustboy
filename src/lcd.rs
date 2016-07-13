@@ -1,11 +1,11 @@
 extern crate minifb;
 
 use std::ops::Range;
-use std::thread;
 use self::minifb::WindowOptions;
 use std::time::{Duration, Instant};
 use window;
 use memory;
+use std::sync::{Arc, RwLock};
 
 // TODO: figure out what these numbers actually mean
 const HBLANKS_BEFORE_DRAW: u8 = 204;
@@ -31,12 +31,12 @@ pub struct LcdScreen {
     scroll: u16,
     control: u8,
     buffer: Vec<u32>,
-    memory: memory::Memory,
+    memory: Arc<RwLock<memory::Memory>>,
     window: minifb::Window,
 }
 
 impl LcdScreen {
-    pub fn new(width: usize, height: usize, memory: memory::Memory) -> Self {
+    pub fn new(width: usize, height: usize, memory: Arc<RwLock<memory::Memory>>) -> Self {
         LcdScreen {
             mode: Mode::Hblank,
             modeclock: 0,
@@ -171,12 +171,14 @@ impl window::Drawable for LcdScreen {
         let frame_duration = Duration::from_millis(16);
         let mut previous_draw = Instant::now();
 
-        self.update();
+        loop {
+            self.update();
 
-        let now = Instant::now();
-        if now - previous_draw > frame_duration {
-            self.draw();
-            previous_draw = now;
+            let now = Instant::now();
+            if now - previous_draw > frame_duration {
+                self.draw();
+                previous_draw = now;
+            }
         }
     }
 }
