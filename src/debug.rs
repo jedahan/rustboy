@@ -56,16 +56,16 @@ impl window::Drawable for DebugScreen {
     }
 
     fn draw(&mut self) {
+        println!("DRAW THE DEBUG TTTTTTTTTTTTTTTTTTTTTTTTTTT");
         let mut count: u16 = self.scroll;
         let memory = self.memory.read().unwrap();
 
-        // TODO: LOCK HERE?
         for i in self.buffer.iter_mut() {
             let gray = memory[count] as u32;
             *i = gray << 16 | gray << 8 | gray;
             count -= 1;
         }
-        // TODO: UNLOCK HERE?
+
         self.window.update_with_buffer(&self.buffer);
     }
 

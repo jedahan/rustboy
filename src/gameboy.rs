@@ -36,6 +36,7 @@ impl GameBoy {
     pub fn run(&mut self) {
         self.cpu.run();
     }
+
     pub fn reset(&mut self) {
         self.cpu.reset();
     }

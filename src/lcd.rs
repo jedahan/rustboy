@@ -160,6 +160,7 @@ impl window::Drawable for LcdScreen {
     }
 
     fn draw(&mut self) {
+        println!("DRAW THE LCD TTTTTTTTTTTTTTTTTTTTTTTTTTT");
         for i in self.buffer.iter_mut() {
             let gray = 6 as u32;
             *i = gray << 16 | gray << 8 | gray;
