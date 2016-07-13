@@ -1,6 +1,6 @@
 use std::fmt;
 use std::thread;
-use std::sync::Arc;
+use std::sync::RwLock;
 
 use window;
 use memory;
@@ -32,7 +32,7 @@ pub struct Cpu {
     reg_e: u8,
     reg_h: u8,
     reg_l: u8,
-    memory: Arc<memory::Memory>,
+    memory: memory::Memory,
     operations: usize,
     debug: bool,
 }
@@ -65,7 +65,7 @@ impl Cpu {
         panic!(message);
     }
 
-    pub fn new(memory: Arc<memory::Memory>) -> Cpu {
+    pub fn new(memory: memory::Memory) -> Cpu {
         let debug = match env::var("DEBUG") {
             Ok(_) => true,
             _ => false,

@@ -1,7 +1,7 @@
 extern crate minifb;
 
 use std::thread;
-use std::sync::Arc;
+use std::sync::RwLock;
 use std::time::{Duration, Instant};
 use self::minifb::{WindowOptions, Key, MouseMode};
 use memory;
@@ -11,11 +11,11 @@ pub struct DebugScreen {
     pub window: minifb::Window,
     pub scroll: u16,
     pub buffer: Vec<u32>,
-    pub memory: Arc<memory::Memory>,
+    pub memory: memory::Memory,
 }
 
 impl DebugScreen {
-    pub fn new(width: usize, height: usize, memory: Arc<memory::Memory>) -> DebugScreen {
+    pub fn new(width: usize, height: usize, memory: memory::Memory) -> DebugScreen {
         DebugScreen {
             buffer: vec![0; width * height],
             memory: memory,

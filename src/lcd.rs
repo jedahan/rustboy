@@ -2,7 +2,6 @@ extern crate minifb;
 
 use std::ops::Range;
 use std::thread;
-use std::sync::Arc;
 use self::minifb::WindowOptions;
 use std::time::{Duration, Instant};
 use window;
@@ -32,12 +31,12 @@ pub struct LcdScreen {
     scroll: u16,
     control: u8,
     buffer: Vec<u32>,
-    memory: Arc<memory::Memory>,
+    memory: memory::Memory,
     window: minifb::Window,
 }
 
 impl LcdScreen {
-    pub fn new(width: usize, height: usize, memory: Arc<memory::Memory>) -> Self {
+    pub fn new(width: usize, height: usize, memory: memory::Memory) -> Self {
         LcdScreen {
             mode: Mode::Hblank,
             modeclock: 0,
