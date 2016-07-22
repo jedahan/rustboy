@@ -2,7 +2,8 @@ extern crate minifb;
 
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
-use self::minifb::{WindowOptions, MouseMode};
+use self::minifb::{Key, WindowOptions, MouseMode};
+use std::thread::sleep;
 use memory;
 use window;
 
@@ -45,6 +46,7 @@ impl window::Drawable for DebugScreen {
                 let x = mouse.0 as u16;
                 let y = mouse.1 as u16;
                 let offset = self.scroll - (y * width + x);
+
                 let memory = self.memory.read().unwrap();
                 let s = format!("0x{:0>4X}: {:0>4X}: {:0>2X}",
                                 self.scroll,
@@ -56,7 +58,6 @@ impl window::Drawable for DebugScreen {
     }
 
     fn draw(&mut self) {
-        println!("DRAW THE DEBUG TTTTTTTTTTTTTTTTTTTTTTTTTTT");
         let mut count: u16 = self.scroll;
         let memory = self.memory.read().unwrap();
 
@@ -70,10 +71,12 @@ impl window::Drawable for DebugScreen {
     }
 
     fn run(&mut self) {
+        println!("DebugScreen::run");
         let frame_duration = Duration::from_millis(16);
+        let ms = Duration::from_millis(1);
         let mut previous_draw = Instant::now();
 
-        loop {
+        while self.window.is_open() && !self.window.is_key_down(Key::Escape) {
             self.update();
 
             let now = Instant::now();
@@ -81,6 +84,7 @@ impl window::Drawable for DebugScreen {
                 self.draw();
                 previous_draw = now;
             };
+            sleep(ms);
         }
     }
 }

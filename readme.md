@@ -11,7 +11,7 @@ Right now, the only build requirement is [rust](rust-lang.org)
 
 To run the emulator, I am using a dumped boot rom with sha1 sum of `4ed31ec6b0b175bb109c0eb5fd3d193da823339f`
 
-    cargo run --release -- DMG_ROM.bin roms/test.gb
+    DEBUG=true cargo run --release -- DMG_ROM.bin roms/test.gb
 
 # thanks
 

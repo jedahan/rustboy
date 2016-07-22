@@ -20,10 +20,7 @@ fn main() {
     let cart = load_cart(Path::new(&cart_rom_file_name));
     println!("{}", cart);
 
-    let mut gameboy: gameboy::GameBoy = gameboy::GameBoy::new(boot, cart);
-    gameboy.reset();
-    println!("{}", gameboy);
-    gameboy.run();
+    gameboy::run(boot, cart);
 }
 
 fn load_bootrom<P: AsRef<Path>>(path: P) -> [u8; gameboy::BOOTROM_SIZE] {

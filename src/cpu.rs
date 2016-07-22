@@ -1,9 +1,8 @@
 use std::fmt;
 
 use memory;
-use std::fmt::Write;
-use std::env;
 use std::sync::{Arc, RwLock};
+use std::fmt::Write;
 
 pub enum Flag {
     ZERO,
@@ -30,8 +29,7 @@ pub struct Cpu {
     reg_h: u8,
     reg_l: u8,
     memory: Arc<RwLock<memory::Memory>>,
-    operations: usize,
-    debug: bool,
+    operations: usize
 }
 
 impl Cpu {
@@ -64,10 +62,6 @@ impl Cpu {
     }
 
     pub fn new(memory: Arc<RwLock<memory::Memory>>) -> Cpu {
-        let debug = match env::var("DEBUG") {
-            Ok(_) => true,
-            _ => false,
-        };
         Cpu {
             pc: 0,
             sp: 0,
@@ -81,7 +75,6 @@ impl Cpu {
             reg_l: 0,
 
             operations: 0,
-            debug: debug,
 
             memory: memory,
         }
@@ -93,29 +86,13 @@ impl Cpu {
         (memory[address + 1] as u16) << 8 | (memory[address + 0] as u16)
     }
 
-    pub fn reset(&mut self) {
-        self.pc = 0x0000;
-        self.sp = 0xFFFE;
-        self.reg_a = 0x01;
-        self.reg_f = 0xB0;
-        self.reg_b = 0x00;
-        self.reg_c = 0x13;
-        self.reg_d = 0x00;
-        self.reg_e = 0xD8;
-        self.reg_h = 0x01;
-        self.reg_l = 0x4D;
-    }
-
     pub fn run(&mut self) {
-        println!("rustboy is running");
+        println!("Cpu::run");
         loop {
             let instruction = self.fetch();
             let advance = self.execute(instruction);
             self.pc += advance;
             self.operations += 1;
-            if self.debug {
-                println!("{:0>4X}: {}", self.operations, self);
-            }
         }
     }
 
@@ -728,6 +705,7 @@ impl Cpu {
 
     fn print_disassembly(&self, instruction: String, num_bytes: u16) {
         let mut s = String::new();
+
         let memory = self.memory.read().unwrap();
         for &byte in &memory[self.pc..self.pc + num_bytes] {
             write!(&mut s, "0x{:0>2X} ", byte).unwrap();

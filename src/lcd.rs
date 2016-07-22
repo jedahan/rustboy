@@ -6,6 +6,7 @@ use std::time::{Duration, Instant};
 use window;
 use memory;
 use std::sync::{Arc, RwLock};
+use std::thread::sleep;
 
 // TODO: figure out what these numbers actually mean
 const HBLANKS_BEFORE_DRAW: u8 = 204;
@@ -31,7 +32,7 @@ pub struct LcdScreen {
     scroll: u16,
     control: u8,
     buffer: Vec<u32>,
-    memory: Arc<RwLock<memory::Memory>>,
+    memory: Arc<RwLock<memory::Memory>>, // TODO: switch to Arc<Mutex<memory::Memory>>
     window: minifb::Window,
 }
 
@@ -170,6 +171,7 @@ impl window::Drawable for LcdScreen {
 
     fn run(&mut self) {
         let frame_duration = Duration::from_millis(16);
+        let ms = Duration::from_millis(1);
         let mut previous_draw = Instant::now();
 
         loop {
@@ -180,6 +182,7 @@ impl window::Drawable for LcdScreen {
                 self.draw();
                 previous_draw = now;
             }
+            sleep(ms);
         }
     }
 }
