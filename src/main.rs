@@ -13,11 +13,19 @@ use std::io::Read;
 use std::path::Path;
 
 fn main() {
-    let boot_rom_file_name = env::args().nth(1).unwrap();
-    let boot = load_bootrom(Path::new(&boot_rom_file_name));
+    let boot_path = match env::args().nth(1) {
+        Some(path) => &path,
+        None => "dmg_rom.bin"
+    };
 
-    let cart_rom_file_name = env::args().nth(2).unwrap();
-    let cart = load_cart(Path::new(&cart_rom_file_name));
+    let boot = load_bootrom(Path::new(&boot_path));
+
+    let cart_path = match env::args().nth(2) {
+        Some(path) => &path,
+        None => "roms/test.gb"
+    };
+
+    let cart = load_cart(Path::new(&cart_path));
     println!("{}", cart);
 
     gameboy::run(boot, cart);
