@@ -11,8 +11,8 @@ pub enum Flag {
     CARRY,
 }
 
-impl Flag {
-    fn to_u8(self) -> u8 {
+impl Into<u8> for Flag {
+    fn into(self) -> u8 {
         1 << (7 - self as u8)
     }
 }
@@ -406,14 +406,14 @@ impl Cpu {
     }
 
     pub fn get(&self, flag: Flag) -> bool {
-        self.reg_f & flag.to_u8() != 0
+        self.reg_f & flag as u8 != 0
     }
 
     pub fn set(&mut self, flag: Flag, set: bool) {
         if set {
-            self.reg_f |= flag.to_u8();
+            self.reg_f |= flag as u8;
         } else {
-            self.reg_f &= !flag.to_u8();
+            self.reg_f &= !(flag as u8);
         }
     }
 
@@ -910,11 +910,11 @@ impl Cpu {
     fn pop_hl(&mut self) -> u16 {
         let size = 1;
         self.print_disassembly(format!("POP HL"), size);
-        self.sp = self.sp + 1;
+        self.sp += 1;
         let mut memory = self.memory.write().unwrap();
         self.reg_h = memory[self.sp];
         memory[self.sp] = 0;
-        self.sp = self.sp + 1;
+        self.sp += 1;
         self.reg_l = memory[self.sp];
         memory[self.sp] = 0;
         size

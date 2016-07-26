@@ -61,7 +61,7 @@ impl window::Drawable for DebugScreen {
         let mut count: u16 = self.scroll;
         let memory = self.memory.read().unwrap();
 
-        for i in self.buffer.iter_mut() {
+        for i in &mut self.buffer {
             let gray = memory[count] as u32;
             *i = gray << 16 | gray << 8 | gray;
             count -= 1;
