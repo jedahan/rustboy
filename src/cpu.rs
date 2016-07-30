@@ -4,17 +4,12 @@ use memory;
 use std::sync::{Arc, RwLock};
 use std::fmt::Write;
 
+#[repr(u8)]
 pub enum Flag {
-    ZERO,
-    SUBTRACT,
-    HALFCARRY,
-    CARRY,
-}
-
-impl Into<u8> for Flag {
-    fn into(self) -> u8 {
-        1 << (7 - self as u8)
-    }
+    ZERO = 1 << 7,
+    SUBTRACT = 1 << 6,
+    HALFCARRY = 1 << 5,
+    CARRY = 1 << 4,
 }
 
 pub struct Cpu {
@@ -851,11 +846,13 @@ impl Cpu {
     fn bit_h(&mut self, bit: u8) -> u16 {
         let size = 1;
         let h = self.reg_h;
-        self.set(Flag::ZERO, h & (1 << bit) == 0);
+        let zero = h & (1 << bit) == 0;
+
+        self.set(Flag::ZERO, zero);
         self.set(Flag::SUBTRACT, false);
         self.set(Flag::HALFCARRY, true);
 
-        self.print_disassembly(format!("BIT {}, H", bit), size);
+        self.print_disassembly(format!("BIT {}, H; {}", bit, zero), size);
         size
     }
 
