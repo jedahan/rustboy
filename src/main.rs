@@ -13,16 +13,11 @@ use std::io::Read;
 use std::path::Path;
 
 fn main() {
-    let boot_path = match env::args().nth(1) {
-        Some(path) => &path,
-        None => "dmg_rom.bin"
-    };
+    let boot = load_bootrom(Path::new("dmg_rom.bin"));
 
-    let boot = load_bootrom(Path::new(&boot_path));
-
-    let cart_path = match env::args().nth(2) {
-        Some(path) => &path,
-        None => "roms/test.gb"
+    let cart_path = match env::args().nth(1) {
+        Some(path) => path,
+        None => "roms/test.gb".to_owned()
     };
 
     let cart = load_cart(Path::new(&cart_path));
