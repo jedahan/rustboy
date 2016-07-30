@@ -1,8 +1,11 @@
 use std::fmt;
+use std::num::Wrapping;
 
 use memory;
 use std::sync::{Arc, RwLock};
 use std::fmt::Write;
+use std::time::Duration;
+use std::thread::sleep;
 
 #[repr(u8)]
 pub enum Flag {
@@ -24,7 +27,8 @@ pub struct Cpu {
     reg_h: u8,
     reg_l: u8,
     memory: Arc<RwLock<memory::Memory>>,
-    operations: usize
+    operations: usize,
+    running: bool
 }
 
 impl Cpu {
@@ -50,10 +54,12 @@ impl Cpu {
 
     }
 
-    fn crash(&self, message: String) {
+    fn crash(&mut self, message: String) -> u16 {
         println!("{:0>4X}: {}", self.operations, self);
         self.print_stack_and_vram(0xFF);
-        panic!(message);
+        println!("{}", message);
+        self.running = false;
+        0
     }
 
     pub fn new(memory: Arc<RwLock<memory::Memory>>) -> Cpu {
@@ -69,6 +75,7 @@ impl Cpu {
             reg_h: 0,
             reg_l: 0,
 
+            running: false,
             operations: 0,
 
             memory: memory,
@@ -83,11 +90,17 @@ impl Cpu {
 
     pub fn run(&mut self) {
         println!("Cpu::run");
-        loop {
+        self.running = true;
+
+        while self.running {
             let instruction = self.fetch();
             let advance = self.execute(instruction);
             self.pc += advance;
             self.operations += 1;
+        }
+        let a_little_bit = Duration::new(1000, 0);
+        loop {
+            sleep(a_little_bit);
         }
     }
 
@@ -109,10 +122,7 @@ impl Cpu {
                 match opcode {
                     0x7C => self.bit_h(7),
                     0x11 => self.rl_c(),
-                    _ => {
-                        self.crash(format!("unrecognized z80 opcode {:0>2X}", opcode));
-                        unreachable!()
-                    }
+                    _ => self.crash(format!("unrecognized z80 opcode {:0>2X}", opcode)),
                 }
             }
             (_, opcode) => {
