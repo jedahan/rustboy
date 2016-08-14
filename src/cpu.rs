@@ -1,5 +1,4 @@
 use std::fmt;
-use std::num::Wrapping;
 
 use memory;
 use std::sync::{Arc, RwLock};
@@ -15,6 +14,9 @@ pub enum Flag {
     CARRY = 1 << 4,
 }
 
+// We will use the program counter (pc) to determine the m-clock,
+// with the t-clock always being m-clock * 4
+#[derive(Clone)]
 pub struct Cpu {
     pc: u16,
     sp: u16,
@@ -97,6 +99,13 @@ impl Cpu {
             let advance = self.execute(instruction);
             self.pc += advance;
             self.operations += 1;
+            match self.pc {
+                0x0000 => println!("START CLEAR VRAM"),
+                0x000C => println!("END CLEAR VRAM\n  START AUDIO"),
+                0x001D => println!("END AUDIO\n  START LOGO"),
+                0x00E0 => println!("END LOGO\n  START CHECKSUM"),
+                _ => ()
+            }
         }
         let a_little_bit = Duration::new(1000, 0);
         loop {
@@ -424,19 +433,18 @@ impl Cpu {
 
     fn rla(&mut self) -> u16 {
         let size = 1;
-        let amount = self.memory.read().unwrap()[self.pc + 1];
+        let amount = { self.memory.read().unwrap()[self.pc + 1] };
         self.print_disassembly(format!("RLA ({})", amount), size);
         if self.reg_a & 0b10000000 != 0 {
             self.set(Flag::CARRY, true)
         }
-        self.reg_a <<= amount as u32;
+        self.reg_a = self.reg_a.rotate_left(amount as u32);
         size
     }
 
     fn rl_c(&mut self) -> u16 {
         let size = 1;
-        let memory = self.memory.read().unwrap();
-        let amount = memory[self.pc + 1];
+        let amount = { self.memory.read().unwrap()[self.pc + 1] };
         self.print_disassembly(format!("RL C ({})", amount), size);
         self.reg_c.rotate_left(amount as u32);
         size
@@ -604,9 +612,9 @@ impl Cpu {
 
         let mut memory = self.memory.write().unwrap();
         memory[self.sp] = return_address_low;
-        self.sp -= 1;
+        self.sp = self.sp.wrapping_sub(1);
         memory[self.sp] = return_address_high;
-        self.sp -= 1;
+        self.sp = self.sp.wrapping_sub(1);
 
         self.pc = address;
         0
@@ -725,18 +733,18 @@ impl Cpu {
     // OPERATIONS START HERE
 
     fn ret(&mut self) -> u16 {
-        let memory = self.memory.read().unwrap();
-        let addr_h = memory[self.sp + 1];
-        let addr_l = memory[self.sp + 2];
+        let memory = { self.memory.read().unwrap() };
+        let addr_h = memory[self.sp.wrapping_add(1)];
+        let addr_l = memory[self.sp.wrapping_add(2)];
         let return_address = (addr_h as u16) << 8 | addr_l as u16;
         self.print_disassembly(format!("RET ({:0>4X})", return_address), 1);
 
         self.pc = return_address;
 
         // move back "up" the stack, zeroing out
-        self.sp += 1;
+        self.sp = self.sp.wrapping_add(1);
         self.sp = 0x00;
-        self.sp += 1;
+        self.sp = self.sp.wrapping_add(1);
         self.sp = 0x00;
 
         0
@@ -746,7 +754,7 @@ impl Cpu {
     // address to the bottom of the stack, so when we can return to the current address
     //
     fn jmp_a16(&mut self) -> u16 {
-        let address = self.read_word(self.pc + 1);
+        let address = self.read_word(self.pc.wrapping_add(1));
         self.print_disassembly(format!("JMP {:0>4X}", address), 3);
         self.pc = address;
         0

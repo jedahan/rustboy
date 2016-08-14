@@ -161,8 +161,7 @@ impl window::Drawable for LcdScreen {
     }
 
     fn draw(&mut self) {
-        println!("DRAW THE LCD TTTTTTTTTTTTTTTTTTTTTTTTTTT");
-        for i in self.buffer.iter_mut() {
+        for i in &mut self.buffer {
             let gray = 6 as u32;
             *i = gray << 16 | gray << 8 | gray;
         }
@@ -171,7 +170,8 @@ impl window::Drawable for LcdScreen {
 
     fn run(&mut self) {
         let frame_duration = Duration::from_millis(16);
-        let ms = Duration::from_millis(1);
+        // (4194304 hz)^-1
+        let clocks5 = Duration::new(0, 1192);
         let mut previous_draw = Instant::now();
 
         loop {
@@ -182,7 +182,7 @@ impl window::Drawable for LcdScreen {
                 self.draw();
                 previous_draw = now;
             }
-            sleep(ms);
+            sleep(clocks5);
         }
     }
 }

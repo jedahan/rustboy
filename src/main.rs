@@ -15,10 +15,7 @@ use std::path::Path;
 fn main() {
     let boot = load_bootrom(Path::new("dmg_rom.bin"));
 
-    let cart_path = match env::args().nth(1) {
-        Some(path) => path,
-        None => "roms/test.gb".to_owned()
-    };
+    let cart_path = env::args().nth(1).unwrap_or("roms/test.gb".to_string());
 
     let cart = load_cart(Path::new(&cart_path));
     println!("{}", cart);
@@ -54,7 +51,7 @@ fn checksums() {
             if entry.file_type().unwrap().is_file() {
                 let filepath = entry.path();
                 // We only test against official cartridges, not homebrew
-                if filepath.file_name().unwrap().to_string_lossy().contains("(") {
+                if filepath.file_name().unwrap().to_string().contains("(") {
                     println!("testing {:?}", filepath);
                     assert!(load_cart(filepath).is_valid());
                 }

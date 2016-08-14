@@ -10,6 +10,8 @@ use window;
 pub struct DebugScreen {
     pub window: minifb::Window,
     pub scroll: u16,
+    pub offset: u16,
+    pub width: usize,
     pub buffer: Vec<u32>,
     pub memory: Arc<RwLock<memory::Memory>>,
 }
@@ -20,6 +22,8 @@ impl DebugScreen {
             buffer: vec![0; width * height],
             memory: memory,
             scroll: 0xFFFF,
+            offset: 0x0000,
+            width: width,
             window: minifb::Window::new("rustboy debug",
                                         width,
                                         height,
@@ -37,34 +41,35 @@ impl window::Drawable for DebugScreen {
     fn update(&mut self) {
         if self.window.is_open() {
             self.window.get_scroll_wheel().map(|scroll| {
-                let width = self.window.get_size().0 as u16 / 4;
-                self.scroll = self.scroll.wrapping_sub(width * scroll.1 as u16);
+                let amount = self.width.wrapping_mul(scroll.1 as usize);
+                self.scroll = self.scroll.wrapping_add(amount as u16);
             });
 
             self.window.get_mouse_pos(MouseMode::Clamp).map(|mouse| {
-                let width = self.window.get_size().0 as u16 / 4;
                 let x = mouse.0 as u16;
                 let y = mouse.1 as u16;
-                let offset = self.scroll - (y * width + x);
-
-                let memory = self.memory.read().unwrap();
-                let s = format!("0x{:0>4X}: {:0>4X}: {:0>2X}",
-                                self.scroll,
-                                offset,
-                                memory[offset]);
-                self.window.set_title(&s);
+                self.offset = y.wrapping_mul(self.width as u16).wrapping_add(x);
             });
         }
     }
 
     fn draw(&mut self) {
-        let mut count: u16 = self.scroll;
-        let memory = self.memory.read().unwrap();
+        let offset = self.scroll.wrapping_sub(self.offset);
+        let byte = { self.memory.read().unwrap()[offset] };
+        let s = format!("0x{:0>4X}: {:0>4X}: {:0>2X}",
+                        self.scroll,
+                        offset,
+                        byte);
+        self.window.set_title(&s);
+
+
+        let mut count = self.scroll;
+        let memory = { self.memory.read().unwrap() };
 
         for i in &mut self.buffer {
             let gray = memory[count] as u32;
             *i = gray << 16 | gray << 8 | gray;
-            count -= 1;
+            count = count.wrapping_sub(1);
         }
 
         self.window.update_with_buffer(&self.buffer);
@@ -75,6 +80,7 @@ impl window::Drawable for DebugScreen {
         let frame_duration = Duration::from_millis(16);
         let ms = Duration::from_millis(1);
         let mut previous_draw = Instant::now();
+        self.width = self.window.get_size().0 / 4;
 
         while self.window.is_open() && !self.window.is_key_down(Key::Escape) {
             self.update();
