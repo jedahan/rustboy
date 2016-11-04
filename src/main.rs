@@ -49,11 +49,10 @@ fn checksums() {
         for entry in fs::read_dir(dir).unwrap() {
             let entry = entry.unwrap();
             if entry.file_type().unwrap().is_file() {
-                let filepath = entry.path();
                 // We only test against official cartridges, not homebrew
-                if filepath.file_name().unwrap().to_string().contains("(") {
-                    println!("testing {:?}", filepath);
-                    assert!(load_cart(filepath).is_valid());
+                if entry.file_name().to_string_lossy().contains("(") {
+                    println!("testing {:?}", entry.file_name());
+                    assert!(load_cart(entry.path()).is_valid());
                 }
             }
         }
