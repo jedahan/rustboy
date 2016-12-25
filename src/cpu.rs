@@ -268,209 +268,63 @@ impl Cpu {
                     0xE1 => self.pop_hl(),
 
                     // loading
-                    0x7F => {
-                        let a = self.a();
-                        self.ld_a(a)
-                    }
-                    0x78 => {
-                        let b = self.b();
-                        self.ld_a(b)
-                    }
-                    0x79 => {
-                        let c = self.c();
-                        self.ld_a(c)
-                    }
-                    0x7A => {
-                        let d = self.d();
-                        self.ld_a(d)
-                    }
-                    0x7B => {
-                        let e = self.e();
-                        self.ld_a(e)
-                    }
-                    0x7C => {
-                        let h = self.h();
-                        self.ld_a(h)
-                    }
-
-                    0x7D => {
-                        let l = self.l();
-                        self.ld_a(l)
-                    }
-
-                    0x47 => {
-                        let a = self.a();
-                        self.ld_b(a)
-                    }
-                    0x40 => {
-                        let b = self.b();
-                        self.ld_b(b)
-                    }
-                    0x41 => {
-                        let c = self.c();
-                        self.ld_b(c)
-                    }
-                    0x42 => {
-                        let d = self.d();
-                        self.ld_b(d)
-                    }
-                    0x43 => {
-                        let e = self.e();
-                        self.ld_b(e)
-                    }
-                    0x44 => {
-                        let h = self.h();
-                        self.ld_b(h)
-                    }
-                    0x45 => {
-                        let l = self.l();
-                        self.ld_b(l)
-                    }
-
-                    0x4F => {
-                        let a = self.a();
-                        self.ld_c(a)
-                    }
-                    0x48 => {
-                        let b = self.b();
-                        self.ld_c(b)
-                    }
-                    0x49 => {
-                        let c = self.c();
-                        self.ld_c(c)
-                    }
-                    0x4A => {
-                        let d = self.d();
-                        self.ld_c(d)
-                    }
-                    0x4B => {
-                        let e = self.e();
-                        self.ld_c(e)
-                    }
-                    0x4C => {
-                        let h = self.h();
-                        self.ld_c(h)
-                    }
-                    0x4D => {
-                        let l = self.l();
-                        self.ld_c(l)
-                    }
-
-                    0x57 => {
-                        let a = self.a();
-                        self.ld_d(a)
-                    }
-                    0x50 => {
-                        let b = self.b();
-                        self.ld_d(b)
-                    }
-                    0x51 => {
-                        let c = self.c();
-                        self.ld_d(c)
-                    }
-                    0x52 => {
-                        let d = self.d();
-                        self.ld_d(d)
-                    }
-                    0x53 => {
-                        let e = self.e();
-                        self.ld_d(e)
-                    }
-                    0x54 => {
-                        let h = self.h();
-                        self.ld_d(h)
-                    }
-                    0x55 => {
-                        let l = self.l();
-                        self.ld_d(l)
-                    }
-
-                    0x5F => {
-                        let a = self.a();
-                        self.ld_e(a)
-                    }
-                    0x58 => {
-                        let b = self.b();
-                        self.ld_e(b)
-                    }
-                    0x59 => {
-                        let c = self.c();
-                        self.ld_e(c)
-                    }
-                    0x5A => {
-                        let d = self.d();
-                        self.ld_e(d)
-                    }
-                    0x5B => {
-                        let e = self.e();
-                        self.ld_e(e)
-                    }
-                    0x5C => {
-                        let h = self.h();
-                        self.ld_e(h)
-                    }
-                    0x5D => {
-                        let l = self.l();
-                        self.ld_e(l)
-                    }
-
-                    0x67 => {
-                        let a = self.a();
-                        self.ld_h(a)
-                    }
-                    0x60 => {
-                        let b = self.b();
-                        self.ld_h(b)
-                    }
-                    0x61 => {
-                        let c = self.c();
-                        self.ld_h(c)
-                    }
-                    0x62 => {
-                        let d = self.d();
-                        self.ld_h(d)
-                    }
-                    0x63 => {
-                        let e = self.e();
-                        self.ld_h(e)
-                    }
-                    0x64 => {
-                        let h = self.h();
-                        self.ld_h(h)
-                    }
-                    0x65 => {
-                        let l = self.l();
-                        self.ld_h(l)
-                    }
-
-                    0x6F => {
-                        let a = self.a();
-                        self.ld_l(a)
-                    }
-                    0x68 => {
-                        let b = self.b();
-                        self.ld_l(b)
-                    }
-                    0x69 => {
-                        let c = self.c();
-                        self.ld_l(c)
-                    }
-                    0x6A => {
-                        let d = self.d();
-                        self.ld_l(d)
-                    }
-                    0x6B => {
-                        let e = self.e();
-                        self.ld_l(e)
-                    }
-                    0x6C => {
-                        let h = self.h();
-                        self.ld_l(h)
-                    }
-                    0x6D => {
-                        let l = self.l();
-                        self.ld_l(l)
-                    }
+                    // TODO: replace with macro
+                    // ld_a
+                    0x7F => { self.ld("a", "a") }
+                    0x78 => { self.ld("a", "b") }
+                    0x79 => { self.ld("a", "c") }
+                    0x7A => { self.ld("a", "d") }
+                    0x7B => { self.ld("a", "e") }
+                    0x7C => { self.ld("a", "h") }
+                    0x7D => { self.ld("a", "l") }
+                    // ld_b
+                    0x47 => { self.ld("b", "a") }
+                    0x40 => { self.ld("b", "b") }
+                    0x41 => { self.ld("b", "c") }
+                    0x42 => { self.ld("b", "d") }
+                    0x43 => { self.ld("b", "e") }
+                    0x44 => { self.ld("b", "h") }
+                    0x45 => { self.ld("b", "l") }
+                    // ld_c
+                    0x4F => { self.ld("c", "a") }
+                    0x48 => { self.ld("c", "b") }
+                    0x49 => { self.ld("c", "c") }
+                    0x4A => { self.ld("c", "d") }
+                    0x4B => { self.ld("c", "e") }
+                    0x4c => { self.ld("c", "h") }
+                    0x4D => { self.ld("c", "l") }
+                    // ld_d
+                    0x57 => { self.ld("d", "a") }
+                    0x50 => { self.ld("d", "b") }
+                    0x51 => { self.ld("d", "c") }
+                    0x52 => { self.ld("d", "d") }
+                    0x53 => { self.ld("d", "e") }
+                    0x54 => { self.ld("d", "h") }
+                    0x55 => { self.ld("d", "l") }
+                    // ld_e
+                    0x5F => { self.ld("e", "a") }
+                    0x58 => { self.ld("e", "b") }
+                    0x59 => { self.ld("e", "c") }
+                    0x5A => { self.ld("e", "d") }
+                    0x5B => { self.ld("e", "e") }
+                    0x5C => { self.ld("e", "h") }
+                    0x5D => { self.ld("e", "l") }
+                    // ld_h
+                    0x67 => { self.ld("h", "a") }
+                    0x60 => { self.ld("h", "b") }
+                    0x61 => { self.ld("h", "c") }
+                    0x62 => { self.ld("h", "d") }
+                    0x63 => { self.ld("h", "e") }
+                    0x64 => { self.ld("h", "h") }
+                    0x65 => { self.ld("h", "l") }
+                    // ld_l
+                    0x6F => { self.ld("l", "a") }
+                    0x68 => { self.ld("l", "b") }
+                    0x69 => { self.ld("l", "c") }
+                    0x6A => { self.ld("l", "d") }
+                    0x6B => { self.ld("l", "e") }
+                    0x6C => { self.ld("l", "h") }
+                    0x6D => { self.ld("l", "l") }
 
                     0x1A => self.ld_a_de(),
 
@@ -567,6 +421,38 @@ impl Cpu {
         size
     }
 
+    // TODO: replace with macro!
+    fn ld(&mut self, to: &'static str, from: &'static str) -> u16 {
+        let size = 1;
+        let value = match from {
+            "a" => self.reg_a,
+            "f" => self.reg_f,
+            "b" => self.reg_b,
+            "c" => self.reg_c,
+            "d" => self.reg_d,
+            "e" => self.reg_e,
+            "h" => self.reg_h,
+            "l" => self.reg_l,
+            _ => panic!("'{}' does not match a register", from)
+        };
+
+        match to {
+            "a" => self.reg_a = value,
+            "f" => self.reg_f = value,
+            "b" => self.reg_b = value,
+            "c" => self.reg_c = value,
+            "d" => self.reg_d = value,
+            "e" => self.reg_e = value,
+            "h" => self.reg_h = value,
+            "l" => self.reg_l = value,
+            _ => panic!("'{}' does not match a register", to)
+        };
+
+        self.print_disassembly(format!("LD {}, {}; {:0>2X}", from, to, value), size);
+
+        size
+    }
+
     fn ld_c_d8(&mut self) -> u16 {
         let size = 2;
         let memory = self.memory.read().unwrap();
@@ -632,55 +518,6 @@ impl Cpu {
     }
     fn l(&self) -> u8 {
         self.reg_l
-    }
-
-    fn ld_a(&mut self, value: u8) -> u16 {
-        let size = 1;
-        self.reg_a = value;
-        self.print_disassembly(format!("LD A, ?; {:0>2X}", value), size);
-        size
-    }
-
-    fn ld_b(&mut self, value: u8) -> u16 {
-        let size = 1;
-        self.reg_b = value;
-        self.print_disassembly(format!("LD B, ?; {:0>2X}", value), size);
-        size
-    }
-
-    fn ld_c(&mut self, value: u8) -> u16 {
-        let size = 1;
-        self.reg_c = value;
-        self.print_disassembly(format!("LD C, ?; {:0>2X}", value), size);
-        size
-    }
-
-    fn ld_d(&mut self, value: u8) -> u16 {
-        let size = 1;
-        self.reg_d = value;
-        self.print_disassembly(format!("LD D, ?; {:0>2X}", value), size);
-        size
-    }
-
-    fn ld_e(&mut self, value: u8) -> u16 {
-        let size = 1;
-        self.reg_e = value;
-        self.print_disassembly(format!("LD E, ?; {:0>2X}", value), size);
-        size
-    }
-
-    fn ld_h(&mut self, value: u8) -> u16 {
-        let size = 1;
-        self.reg_h = value;
-        self.print_disassembly(format!("LD H, ?; {:0>2X}", value), size);
-        size
-    }
-
-    fn ld_l(&mut self, value: u8) -> u16 {
-        let size = 1;
-        self.reg_l = value;
-        self.print_disassembly(format!("LD L, ?; {:0>2X}", value), size);
-        size
     }
 
     fn call(&mut self) -> u16 {
