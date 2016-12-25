@@ -142,7 +142,7 @@ impl Cpu {
     // ($40,$48,$50,$58,$60). This consumes one last machine cycle.
     // The entire ISR should consume a total of 5 machine cycles. This has yet to be tested, but is what the Z80 datasheet implies.
     pub fn service_interrupts(&mut self) {
-        // If any IF flag and the corresponding IE flag are both '1' and IME is set to '1' too, the CPU will push the current PC into the stack, will jump to the corresponding interrupt vector and set IME to '0'. If IME is '0', this won't happen. 
+        // If any IF flag and the corresponding IE flag are both '1' and IME is set to '1' too, the CPU will push the current PC into the stack, will jump to the corresponding interrupt vector and set IME to '0'. If IME is '0', this won't happen.
         // TODO: what does 'this' refer to?
         // If IME='0' and CPU is halted, when any interrupt is triggered by setting any IF flag to '1' with the corresponding bit in IE set to '1', it takes 4 clocks to exit halt mode, even if the CPU doesn't jump to the interrupt vector.
         if self.ime {
@@ -270,61 +270,61 @@ impl Cpu {
                     // loading
                     // TODO: replace with macro
                     // ld_a
-                    0x7F => { self.ld("a", "a") }
-                    0x78 => { self.ld("a", "b") }
-                    0x79 => { self.ld("a", "c") }
-                    0x7A => { self.ld("a", "d") }
-                    0x7B => { self.ld("a", "e") }
-                    0x7C => { self.ld("a", "h") }
-                    0x7D => { self.ld("a", "l") }
+                    0x7F => self.ld("a", "a"),
+                    0x78 => self.ld("a", "b"),
+                    0x79 => self.ld("a", "c"),
+                    0x7A => self.ld("a", "d"),
+                    0x7B => self.ld("a", "e"),
+                    0x7C => self.ld("a", "h"),
+                    0x7D => self.ld("a", "l"),
                     // ld_b
-                    0x47 => { self.ld("b", "a") }
-                    0x40 => { self.ld("b", "b") }
-                    0x41 => { self.ld("b", "c") }
-                    0x42 => { self.ld("b", "d") }
-                    0x43 => { self.ld("b", "e") }
-                    0x44 => { self.ld("b", "h") }
-                    0x45 => { self.ld("b", "l") }
+                    0x47 => self.ld("b", "a"),
+                    0x40 => self.ld("b", "b"),
+                    0x41 => self.ld("b", "c"),
+                    0x42 => self.ld("b", "d"),
+                    0x43 => self.ld("b", "e"),
+                    0x44 => self.ld("b", "h"),
+                    0x45 => self.ld("b", "l"),
                     // ld_c
-                    0x4F => { self.ld("c", "a") }
-                    0x48 => { self.ld("c", "b") }
-                    0x49 => { self.ld("c", "c") }
-                    0x4A => { self.ld("c", "d") }
-                    0x4B => { self.ld("c", "e") }
-                    0x4c => { self.ld("c", "h") }
-                    0x4D => { self.ld("c", "l") }
+                    0x4F => self.ld("c", "a"),
+                    0x48 => self.ld("c", "b"),
+                    0x49 => self.ld("c", "c"),
+                    0x4A => self.ld("c", "d"),
+                    0x4B => self.ld("c", "e"),
+                    0x4c => self.ld("c", "h"),
+                    0x4D => self.ld("c", "l"),
                     // ld_d
-                    0x57 => { self.ld("d", "a") }
-                    0x50 => { self.ld("d", "b") }
-                    0x51 => { self.ld("d", "c") }
-                    0x52 => { self.ld("d", "d") }
-                    0x53 => { self.ld("d", "e") }
-                    0x54 => { self.ld("d", "h") }
-                    0x55 => { self.ld("d", "l") }
+                    0x57 => self.ld("d", "a"),
+                    0x50 => self.ld("d", "b"),
+                    0x51 => self.ld("d", "c"),
+                    0x52 => self.ld("d", "d"),
+                    0x53 => self.ld("d", "e"),
+                    0x54 => self.ld("d", "h"),
+                    0x55 => self.ld("d", "l"),
                     // ld_e
-                    0x5F => { self.ld("e", "a") }
-                    0x58 => { self.ld("e", "b") }
-                    0x59 => { self.ld("e", "c") }
-                    0x5A => { self.ld("e", "d") }
-                    0x5B => { self.ld("e", "e") }
-                    0x5C => { self.ld("e", "h") }
-                    0x5D => { self.ld("e", "l") }
+                    0x5F => self.ld("e", "a"),
+                    0x58 => self.ld("e", "b"),
+                    0x59 => self.ld("e", "c"),
+                    0x5A => self.ld("e", "d"),
+                    0x5B => self.ld("e", "e"),
+                    0x5C => self.ld("e", "h"),
+                    0x5D => self.ld("e", "l"),
                     // ld_h
-                    0x67 => { self.ld("h", "a") }
-                    0x60 => { self.ld("h", "b") }
-                    0x61 => { self.ld("h", "c") }
-                    0x62 => { self.ld("h", "d") }
-                    0x63 => { self.ld("h", "e") }
-                    0x64 => { self.ld("h", "h") }
-                    0x65 => { self.ld("h", "l") }
+                    0x67 => self.ld("h", "a"),
+                    0x60 => self.ld("h", "b"),
+                    0x61 => self.ld("h", "c"),
+                    0x62 => self.ld("h", "d"),
+                    0x63 => self.ld("h", "e"),
+                    0x64 => self.ld("h", "h"),
+                    0x65 => self.ld("h", "l"),
                     // ld_l
-                    0x6F => { self.ld("l", "a") }
-                    0x68 => { self.ld("l", "b") }
-                    0x69 => { self.ld("l", "c") }
-                    0x6A => { self.ld("l", "d") }
-                    0x6B => { self.ld("l", "e") }
-                    0x6C => { self.ld("l", "h") }
-                    0x6D => { self.ld("l", "l") }
+                    0x6F => self.ld("l", "a"),
+                    0x68 => self.ld("l", "b"),
+                    0x69 => self.ld("l", "c"),
+                    0x6A => self.ld("l", "d"),
+                    0x6B => self.ld("l", "e"),
+                    0x6C => self.ld("l", "h"),
+                    0x6D => self.ld("l", "l"),
 
                     0x1A => self.ld_a_de(),
 
