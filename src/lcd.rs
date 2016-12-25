@@ -38,7 +38,7 @@ impl LcdScreen {
 
     // ported from http://imrannazar.com/GameBoy-Emulation-in-JavaScript:-GPU-Timings
     // because i am lazy and not sure how things work
-    pub fn enable(&self) -> bool {
+    pub fn enabled(&self) -> bool {
         self.control & 0b10000000 != 0
     }
 
@@ -86,12 +86,13 @@ impl LcdScreen {
             (8, 16)
         }
     }
+
 }
 
 impl window::Drawable for LcdScreen {
     fn update(&mut self) {
         self.control = { self.memory.read().unwrap()[0xFF40 as u16] };
-        if self.enable() {
+        if self.enabled() {
             self.draw();
         }
     }
@@ -106,7 +107,8 @@ impl window::Drawable for LcdScreen {
     }
 
     fn run(&mut self) {
-        return
+        println!("LcdScreen::run");
+        self.memory.write().unwrap()[0xFF40 as u16] |= 0b10000000;
     }
 }
 
