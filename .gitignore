@@ -1,5 +1,6 @@
 target*/
 roms/
+.DS_Store
 DMG_ROM.bin
 *dis
 *csv
