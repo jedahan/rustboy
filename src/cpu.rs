@@ -547,7 +547,7 @@ impl Cpu {
     fn ld_a_de(&mut self) -> u16 {
         let size = 1;
         let address = self.de();
-        self.print_disassembly(format!("LD A,${:0>4X}", address), size);
+        self.print_disassembly(format!("LD A, DE ; DE=${:0>4X}", address), size);
         let memory = self.memory.read().unwrap();
         self.reg_a = memory[address];
         size
@@ -566,7 +566,7 @@ impl Cpu {
     fn ld_hl_a(&mut self) -> u16 {
         let size = 1;
         let address = self.hl();
-        self.print_disassembly(format!("LD 0x{:0>4X}, A", address), size);
+        self.print_disassembly(format!("LD [HL], A ; HL=0x{:0>4X}, A={:0>2X}", address, self.reg_a), size);
         let mut memory = self.memory.write().unwrap();
         memory[address] = self.reg_a;
         size
@@ -624,7 +624,7 @@ impl Cpu {
     fn ldr_c_a(&mut self) -> u16 {
         let size = 1;
         let address = 0xFF00 + self.reg_c as u16;
-        self.print_disassembly(format!("LD +${:0>2X}, {:0>2X}", self.reg_c, self.reg_a),
+        self.print_disassembly(format!("LD [C],A; C=+${:0>2X}, A={:0>2X}", self.reg_c, self.reg_a),
                                size);
         let mut memory = self.memory.write().unwrap();
         memory[address] = self.reg_a;
