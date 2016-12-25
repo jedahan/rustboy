@@ -185,9 +185,16 @@ impl Cpu {
             self.operations += 1;
             self.screen.update();
 
-            if self.operations == 0x7090 {
-                self.running = false;
-                println!("{}", self);
+            match self.operations {
+                0x0001 => {
+                    self.screen.run();
+                    println!("MAIN SCREEN TURN ON");
+                },
+                0x7090 => {
+                    self.running = false;
+                    println!("{}", self);
+                },
+                _ => ()
             }
 
             match self.pc {
