@@ -82,3 +82,13 @@ Started by loading what we needed for tetris, then changed the program counter t
 what is needed for bootstrapping. Soon will have to implement drawing graphics :).
 
 Will probably have to skip audio operations for a little bit, anxious to see the nintendo logo.
+
+# novemb.rs
+
+started with introductions
+going to work on the gameboy emulator
+want to get the icon working
+cargo build fails
+now installing racer and enabling rust plugins for nvim
+then will build, and test if putting the icns file in the right place is what to do...
+then figuring out if there is a cargo build hook to that stuff
