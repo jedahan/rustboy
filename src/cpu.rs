@@ -426,7 +426,6 @@ impl Cpu {
         let size = 1;
         let value = match from {
             "a" => self.reg_a,
-            "f" => self.reg_f,
             "b" => self.reg_b,
             "c" => self.reg_c,
             "d" => self.reg_d,
@@ -438,7 +437,6 @@ impl Cpu {
 
         match to {
             "a" => self.reg_a = value,
-            "f" => self.reg_f = value,
             "b" => self.reg_b = value,
             "c" => self.reg_c = value,
             "d" => self.reg_d = value,
