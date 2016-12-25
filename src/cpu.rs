@@ -1,10 +1,10 @@
 use std::fmt;
 
+use lcd;
 use memory;
 use std::sync::{Arc, RwLock};
 use std::fmt::Write;
-use std::time::Duration;
-use std::thread::sleep;
+use window::Drawable;
 
 #[repr(u8)]
 pub enum Flag {
@@ -14,9 +14,6 @@ pub enum Flag {
     CARRY = 1 << 4,
 }
 
-// We will use the program counter (pc) to determine the m-clock,
-// with the t-clock always being m-clock * 4
-#[derive(Clone)]
 pub struct Cpu {
     pc: u16,
     sp: u16,
@@ -28,7 +25,9 @@ pub struct Cpu {
     reg_e: u8,
     reg_h: u8,
     reg_l: u8,
+    ime: bool,
     memory: Arc<RwLock<memory::Memory>>,
+    screen: lcd::LcdScreen,
     operations: usize,
     running: bool
 }
@@ -64,7 +63,18 @@ impl Cpu {
         0
     }
 
+    /**
+     * Should I set this on new() or run()?
+     * AF 01B0h
+     * BC 0013h
+     * DE 00D8h
+     * HL 014Dh
+     * SP FFFEh
+     * PC 0100h
+     **/
     pub fn new(memory: Arc<RwLock<memory::Memory>>) -> Cpu {
+        let memory_ref = memory.clone();
+        let screen = lcd::LcdScreen::new(160, 144, memory_ref);
         Cpu {
             pc: 0,
             sp: 0,
@@ -77,12 +87,44 @@ impl Cpu {
             reg_h: 0,
             reg_l: 0,
 
+            ime: false,
+
             running: false,
             operations: 0,
 
             memory: memory,
+            screen: screen,
         }
     }
+
+    /** Interrupt master enable.
+     * This flag is not mapped to memory and can't be read by any means.
+     * The meaning of the flag is not to enable or disable interrupts.
+     * In fact, what it does is enable the jump to the interrupt vectors.
+     * IME can only be set to '1' by the instructions EI and RETI,
+     * and can only be set to '0' by DI (and the CPU when jumping to an interrupt vector).
+     *
+     * Note that EI doesn't enable the interrupts the same cycle it is executed, but the next cycle!
+     *
+     *   di
+     *   ld  a,IEF_TIMER
+     *   ld  [rIE],a
+     *   ld  [rIF],a
+     *   ei
+     *   inc a ; This is still executed before jumping to the interrupt vector.
+     *   inc a ; This is executed after returning.
+     *   ld   [hl+],a
+     **/
+    fn ime(&mut self, enable: bool) -> bool {
+        self.ime = enable;
+        self.ime
+    }
+
+
+    pub fn service(&mut self, vector: u16) {
+        println!("In where we service vector 0x{:0>4X}", vector);
+    }
+
 
     // Not sure if this is little-endian or big-endian
     fn read_word(&self, address: u16) -> u16 {
@@ -90,15 +132,64 @@ impl Cpu {
         (memory[address + 1] as u16) << 8 | (memory[address + 0] as u16)
     }
 
+    // It takes 20 clocks to dispatch an interrupt.
+    // If CPU is in HALT mode, another extra 4 clocks are needed.
+    // These timings are the same in every Game Boy model or in double/single speeds in CGB/AGB/AGS.
+    //
+    // 1. Two wait states are executed (2 machine cycles pass while nothing occurs, presumably the CPU is executing NOPs during this time).
+    // 2. The current PC is pushed onto the stack, this process consumes 2 more machine cycles.
+    // 3. The high byte of the PC is set to 0, the low byte is set to the address of the handler
+    // ($40,$48,$50,$58,$60). This consumes one last machine cycle.
+    // The entire ISR should consume a total of 5 machine cycles. This has yet to be tested, but is what the Z80 datasheet implies.
+    pub fn service_interrupts(&mut self) {
+        // If any IF flag and the corresponding IE flag are both '1' and IME is set to '1' too, the CPU will push the current PC into the stack, will jump to the corresponding interrupt vector and set IME to '0'. If IME is '0', this won't happen. 
+        // TODO: what does 'this' refer to?
+        // If IME='0' and CPU is halted, when any interrupt is triggered by setting any IF flag to '1' with the corresponding bit in IE set to '1', it takes 4 clocks to exit halt mode, even if the CPU doesn't jump to the interrupt vector.
+        if self.ime {
+            self.sp = self.pc;
+            self.sp += 1;
+
+            // service the lowest bit (highest priority) interrupt
+            let interrupts: u8 = self.interrupt_enable() & self.interrupt_flag();
+            // TCAGBD 2.2
+            self.service(0x0040 + (8 * (interrupts.trailing_zeros() as u16)));
+        }
+    }
+
+    // interrupt flag / interrupt enable
+    //
+    // Bit 4 – Joypad Interrupt Requested
+    // Bit 3 – Serial Interrupt Requested
+    // Bit 2 – Timer Interrupt Requested
+    // Bit 1 – LCD STAT Interrupt Requested
+    // Bit 0 – Vertical Blank Interrupt Requested (1=Requested)
+    fn interrupt_flag(&self) -> u8 {
+        self.memory.read().unwrap()[0xFFFFu16] & 0b00011111
+    }
+
+    fn interrupt_enable(&self) -> u8 {
+        self.memory.read().unwrap()[0xFF0Fu16] & 0b00011111
+    }
+
     pub fn run(&mut self) {
         println!("Cpu::run");
         self.running = true;
 
         while self.running {
+            // interrupts are serviced before fetching the next instruction
+            self.service_interrupts();
+
             let instruction = self.fetch();
             let advance = self.execute(instruction);
             self.pc += advance;
             self.operations += 1;
+            self.screen.update();
+
+            if self.operations == 0x7090 {
+                self.running = false;
+                println!("{}", self);
+            }
+
             match self.pc {
                 0x0000 => println!("START CLEAR VRAM"),
                 0x000C => println!("END CLEAR VRAM\n  START AUDIO"),
@@ -106,10 +197,6 @@ impl Cpu {
                 0x00E0 => println!("END LOGO\n  START CHECKSUM"),
                 _ => ()
             }
-        }
-        let a_little_bit = Duration::new(1000, 0);
-        loop {
-            sleep(a_little_bit);
         }
     }
 
@@ -811,7 +898,7 @@ impl Cpu {
 
     fn ldd_hl_a(&mut self) -> u16 {
         let size = 1;
-        self.print_disassembly(format!("LD (HL-) ({:0>2X}{:0>2X}), {:?}",
+        self.print_disassembly(format!("LD [HLD],A ; HL=({:0>2X}{:0>2X}), A={:?}",
                                        self.reg_h,
                                        self.reg_l,
                                        self.reg_a),
@@ -1070,8 +1157,10 @@ impl fmt::Display for Cpu {
                        {sp:0>4X}\n\tregisters: {{ a: {a:0>2X}, f: {f:0>2X}, b: {b:0>2X}, c: \
                        {c:0>2X}, d: {d:0>2X}, e: {e:0>2X}, h: {h:0>2X}, l: {l:0>2X} \
                        }}\n\tflags: {{ zero: {zero}, sub: {sub}, half: {half}, carry: {carry} \
-                       }}
-            \n}}
+                   }}\n}}
+                       \nscreen {{ \
+                       \n\t{screen}\
+                   }}
             ",
                       pc = self.pc,
                       i0 = memory[self.pc + 0],
@@ -1090,7 +1179,8 @@ impl fmt::Display for Cpu {
                       zero = self.get(Flag::ZERO),
                       sub = self.get(Flag::SUBTRACT),
                       half = self.get(Flag::HALFCARRY),
-                      carry = self.get(Flag::CARRY)));
+                      carry = self.get(Flag::CARRY),
+                      screen = self.screen));
 
         self.print_stack_and_vram(8);
         Ok(())
