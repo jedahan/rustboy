@@ -1,14 +1,12 @@
-use header;
+use header::Header;
 
 use std::fmt;
 use std::ops::{Index, IndexMut, Range};
 
-use header::Header;
-
 #[derive(Debug)]
 pub struct Cart {
     pub mem: Vec<u8>,
-    pub headers: Vec<header::Header>,
+    pub headers: Vec<Header>,
 }
 
 impl Cart {
@@ -42,9 +40,8 @@ impl Cart {
     }
 
     fn global_checksum(&self) -> u16 {
-        let mut sum = self.mem.iter().fold(0, |a: u16, &b| a.wrapping_add(b as u16));
-        sum = sum - self.mem[0x14D] as u16 - self.mem[0x14E] as u16;
-        sum
+        let sum = self.mem.iter().fold(0, |a: u16, &b| a.wrapping_add(b as u16));
+        sum - self.mem[0x14D] as u16 - self.mem[0x14E] as u16
     }
 
     pub fn is_valid(&self) -> bool {
