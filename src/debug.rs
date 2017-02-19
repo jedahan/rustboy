@@ -4,6 +4,7 @@ use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
 use self::minifb::{Key, WindowOptions, MouseMode};
 use std::thread::sleep;
+use std::fmt;
 use memory;
 use window;
 
@@ -14,27 +15,6 @@ pub struct DebugScreen {
     pub width: usize,
     pub buffer: Vec<u32>,
     pub memory: Arc<RwLock<memory::Memory>>,
-}
-
-impl DebugScreen {
-    pub fn new(width: usize, height: usize, memory: Arc<RwLock<memory::Memory>>) -> DebugScreen {
-        DebugScreen {
-            buffer: vec![0; width * height],
-            memory: memory,
-            scroll: 0xFFFF,
-            offset: 0x0000,
-            width: width,
-            window: minifb::Window::new("rustboy debug",
-                                        width,
-                                        height,
-                                        WindowOptions {
-                                            borderless: true,
-                                            scale: minifb::Scale::X4,
-                                            ..Default::default()
-                                        })
-                .unwrap(),
-        }
-    }
 }
 
 impl window::Drawable for DebugScreen {
@@ -76,11 +56,13 @@ impl window::Drawable for DebugScreen {
     }
 
     fn run(&mut self) {
-        println!("DebugScreen::run");
+        self.width = self.window.get_size().0 / 4;
+    }
+
+    fn pause(&mut self) {
         let frame_duration = Duration::from_millis(16);
         let ms = Duration::from_millis(1);
         let mut previous_draw = Instant::now();
-        self.width = self.window.get_size().0 / 4;
 
         while self.window.is_open() && !self.window.is_key_down(Key::Escape) {
             self.update();
@@ -94,3 +76,32 @@ impl window::Drawable for DebugScreen {
         }
     }
 }
+
+impl fmt::Display for DebugScreen {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        try!(writeln!(f, "offset: {offset:0>4X}", offset=self.offset));
+        Ok(())
+    }
+}
+
+impl DebugScreen {
+    pub fn new(width: usize, height: usize, memory: Arc<RwLock<memory::Memory>>) -> DebugScreen {
+        DebugScreen {
+            buffer: vec![0; width * height],
+            memory: memory,
+            scroll: 0xFFFF,
+            offset: 0x0000,
+            width: width,
+            window: minifb::Window::new("rustboy debug",
+                                        width,
+                                        height,
+                                        WindowOptions {
+                                            borderless: true,
+                                            scale: minifb::Scale::X4,
+                                            ..Default::default()
+                                        })
+                .unwrap(),
+        }
+    }
+}
+

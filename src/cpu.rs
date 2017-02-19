@@ -1,10 +1,12 @@
-use std::fmt;
+use std::{env, fmt};
 
 use lcd;
+use debug;
 use memory;
+use window::Window;
 use std::sync::{Arc, RwLock};
 use std::fmt::Write;
-use window::Drawable;
+use std::time;
 
 #[repr(u8)]
 pub enum Flag {
@@ -27,9 +29,9 @@ pub struct Cpu {
     reg_l: u8,
     ime: bool,
     memory: Arc<RwLock<memory::Memory>>,
-    screen: lcd::LcdScreen,
     operations: usize,
-    running: bool
+    running: bool,
+    screen: Box<Window>
 }
 
 impl Cpu {
@@ -74,7 +76,11 @@ impl Cpu {
      **/
     pub fn new(memory: Arc<RwLock<memory::Memory>>) -> Cpu {
         let memory_ref = memory.clone();
-        let screen = lcd::LcdScreen::new(160, 144, memory_ref);
+        let screen: Box<Window> = match env::var("DEBUG") {
+            Ok(_) => Box::new(debug::DebugScreen::new(160, 144, memory_ref)),
+            Err(_) => Box::new(lcd::LcdScreen::new(160, 144, memory_ref))
+        };
+
         Cpu {
             pc: 0,
             sp: 0,
@@ -174,6 +180,8 @@ impl Cpu {
     pub fn run(&mut self) {
         println!("Cpu::run");
         self.running = true;
+        let mut frame_start = time::Instant::now();
+        let target_frame_duration = time::Duration::from_millis(16);
 
         while self.running {
             // interrupts are serviced before fetching the next instruction
@@ -183,7 +191,13 @@ impl Cpu {
             let advance = self.execute(instruction);
             self.pc += advance;
             self.operations += 1;
+
             self.screen.update();
+
+            if frame_start.elapsed() >= target_frame_duration {
+                frame_start = time::Instant::now();
+                self.screen.draw();
+            };
 
             match self.operations {
                 0x0001 => {
@@ -205,6 +219,8 @@ impl Cpu {
                 _ => ()
             }
         }
+
+        self.screen.pause();
     }
 
     fn fetch(&mut self) -> (u8, u8) {
