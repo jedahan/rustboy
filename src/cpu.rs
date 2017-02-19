@@ -518,28 +518,6 @@ impl Cpu {
         size
     }
 
-    fn a(&self) -> u8 {
-        self.reg_a
-    }
-    fn b(&self) -> u8 {
-        self.reg_b
-    }
-    fn c(&self) -> u8 {
-        self.reg_c
-    }
-    fn d(&self) -> u8 {
-        self.reg_d
-    }
-    fn e(&self) -> u8 {
-        self.reg_e
-    }
-    fn h(&self) -> u8 {
-        self.reg_h
-    }
-    fn l(&self) -> u8 {
-        self.reg_l
-    }
-
     fn call(&mut self) -> u16 {
         let size = 3;
         let address = self.read_word(self.pc + 1);

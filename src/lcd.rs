@@ -42,22 +42,27 @@ impl LcdScreen {
 
     // ported from http://imrannazar.com/GameBoy-Emulation-in-JavaScript:-GPU-Timings
     // because i am lazy and not sure how things work
+    #[allow(dead_code)]
     pub fn enabled(&self) -> bool {
         self.control & 0b10000000 != 0
     }
 
+    #[allow(dead_code)]
     pub fn window_display_enable(&self) -> bool {
         self.control & 0b00100000 != 0
     }
 
+    #[allow(dead_code)]
     pub fn obj_display_enable(&self) -> bool {
         self.control & 0b00000010 != 0
     }
 
+    #[allow(dead_code)]
     pub fn bg_display(&self) -> bool {
         self.control & 0b00000001 != 0
     }
 
+    #[allow(dead_code)]
     pub fn window_tile_map_display_select(&self) -> Range<u16> {
         // give me a bit of self.control ...
         if self.control & 0b01000000 == 0 {
@@ -67,6 +72,7 @@ impl LcdScreen {
         }
     }
 
+    #[allow(dead_code)]
     pub fn bg_and_window_tile_data_select(&self) -> Range<u16> {
         if self.control & 0b00010000 == 0 {
             0x8800..0x97FF
@@ -75,6 +81,7 @@ impl LcdScreen {
         }
     }
 
+    #[allow(dead_code)]
     pub fn bg_tile_map_display_select(&self) -> Range<u16> {
         if self.control & 0b00001000 == 0 {
             0x9800..0x9BFF
@@ -83,6 +90,7 @@ impl LcdScreen {
         }
     }
 
+    #[allow(dead_code)]
     pub fn obj_size(&self) -> (u8, u8) {
         if self.control & 0b00000100 == 0 {
             (8, 8)
