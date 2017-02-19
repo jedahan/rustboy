@@ -203,11 +203,7 @@ impl Cpu {
                 0x0001 => {
                     self.screen.run();
                     println!("MAIN SCREEN TURN ON");
-                },
-                0x7090 => {
-                    self.running = false;
-                    println!("{}", self);
-                },
+                }
                 _ => ()
             }
 
@@ -215,7 +211,10 @@ impl Cpu {
                 0x0000 => println!("START CLEAR VRAM"),
                 0x000C => println!("END CLEAR VRAM\n  START AUDIO"),
                 0x001D => println!("END AUDIO\n  START LOGO"),
-                0x00E0 => println!("END LOGO\n  START CHECKSUM"),
+                0x00E0 => {
+                    println!("END LOGO\n  START CHECKSUM");
+                    self.halt();
+                }
                 _ => ()
             }
         }
@@ -281,6 +280,8 @@ impl Cpu {
                     0xCD => self.call(),
 
                     0xC9 => self.ret(),
+
+                    0x76 => self.halt(),
 
                     // stack
                     0xFE => self.cp_d8(),
@@ -692,6 +693,11 @@ impl Cpu {
         self.sp = self.sp.wrapping_add(1);
         self.sp = 0x00;
 
+        0
+    }
+
+    fn halt(&mut self) -> u16 {
+        self.running = false;
         0
     }
 
