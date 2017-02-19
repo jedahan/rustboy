@@ -121,9 +121,15 @@ impl Cpu {
      *   inc a ; This is executed after returning.
      *   ld   [hl+],a
      **/
-    fn ime(&mut self, enable: bool) -> bool {
+    fn ime(&mut self, enable: bool) -> u16 {
+        let size = 1;
         self.ime = enable;
-        self.ime
+        if enable {
+            self.print_disassembly(format!("IE"), size);
+        } else {
+            self.print_disassembly(format!("DI"), size);
+        }
+        size
     }
 
 
@@ -282,6 +288,8 @@ impl Cpu {
                     0xC9 => self.ret(),
 
                     0x76 => self.halt(),
+                    0xF3 => self.ime(true),
+                    0xFB => self.ime(false),
 
                     // stack
                     0xFE => self.cp_d8(),
