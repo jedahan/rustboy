@@ -248,24 +248,24 @@ impl Cpu {
                     0x00 => self.nop(),
 
                     // math
-                    0x0C => self.inc_c(),
-                    0x1C => self.inc_e(),
-                    0x2C => self.inc_l(),
-                    0x3C => self.inc_a(),
-                    0x04 => self.inc_b(),
-                    0x14 => self.inc_d(),
-                    0x24 => self.inc_h(),
+                    0x0C => self.inc("c"),
+                    0x1C => self.inc("e"),
+                    0x2C => self.inc("l"),
+                    0x3C => self.inc("a"),
+                    0x04 => self.inc("b"),
+                    0x14 => self.inc("d"),
+                    0x24 => self.inc("h"),
 
                     0x13 => self.inc_de(),
                     0x23 => self.inc_hl(),
 
-                    0x0D => self.dec_c(),
-                    0x1D => self.dec_e(),
-                    0x2D => self.dec_l(),
-                    0x3D => self.dec_a(),
-                    0x05 => self.dec_b(),
-                    0x15 => self.dec_d(),
-                    0x25 => self.dec_h(),
+                    0x0D => self.dec("c"),
+                    0x1D => self.dec("e"),
+                    0x2D => self.dec("l"),
+                    0x3D => self.dec("a"),
+                    0x05 => self.dec("b"),
+                    0x15 => self.dec("d"),
+                    0x25 => self.dec("h"),
 
                     0xAF => self.xor_a(),
 
@@ -292,7 +292,7 @@ impl Cpu {
                     0xE1 => self.pop_hl(),
 
                     // loading
-                    // TODO: replace with macro
+                    // TODO: replace with macros
                     // ld_a
                     0x7F => self.ld("a", "a"),
                     0x78 => self.ld("a", "b"),
@@ -445,19 +445,9 @@ impl Cpu {
         size
     }
 
-    // TODO: replace with macro!
     fn ld(&mut self, to: &'static str, from: &'static str) -> u16 {
         let size = 1;
-        let value = match from {
-            "a" => self.reg_a,
-            "b" => self.reg_b,
-            "c" => self.reg_c,
-            "d" => self.reg_d,
-            "e" => self.reg_e,
-            "h" => self.reg_h,
-            "l" => self.reg_l,
-            _ => panic!("'{}' does not match a register", from)
-        };
+        let value = self.reg(from);
 
         match to {
             "a" => self.reg_a = value,
@@ -470,7 +460,7 @@ impl Cpu {
             _ => panic!("'{}' does not match a register", to)
         };
 
-        self.print_disassembly(format!("LD {}, {}; {:0>2X}", from, to, value), size);
+        self.print_disassembly(format!("LD {}, {}; {:0>2X}", to, from, value), size);
 
         size
     }
@@ -594,52 +584,19 @@ impl Cpu {
         size
     }
 
-    fn inc_a(&mut self) -> u16 {
+    fn inc(&mut self, from: &'static str) -> u16 {
         let size = 1;
-        self.print_disassembly(format!("INC A"), size);
-        self.reg_a = self.reg_a.wrapping_add(1);
-        size
-    }
-
-    fn inc_b(&mut self) -> u16 {
-        let size = 1;
-        self.print_disassembly(format!("INC B"), size);
-        self.reg_b = self.reg_b.wrapping_add(1);
-        size
-    }
-
-    fn inc_c(&mut self) -> u16 {
-        let size = 1;
-        self.print_disassembly(format!("INC C"), size);
-        self.reg_c = self.reg_c.wrapping_add(1);
-        size
-    }
-
-    fn inc_d(&mut self) -> u16 {
-        let size = 1;
-        self.print_disassembly(format!("INC D"), size);
-        self.reg_d = self.reg_d.wrapping_add(1);
-        size
-    }
-
-    fn inc_e(&mut self) -> u16 {
-        let size = 1;
-        self.print_disassembly(format!("INC E"), size);
-        self.reg_e = self.reg_e.wrapping_add(1);
-        size
-    }
-
-    fn inc_h(&mut self) -> u16 {
-        let size = 1;
-        self.print_disassembly(format!("INC H"), size);
-        self.reg_h = self.reg_h.wrapping_add(1);
-        size
-    }
-
-    fn inc_l(&mut self) -> u16 {
-        let size = 1;
-        self.print_disassembly(format!("INC L"), size);
-        self.reg_l = self.reg_l.wrapping_add(1);
+        self.print_disassembly(format!("INC {}", from), size);
+        match from {
+            "a" => self.reg_a = self.reg_a.wrapping_add(1),
+            "b" => self.reg_b = self.reg_b.wrapping_add(1),
+            "c" => self.reg_c = self.reg_c.wrapping_add(1),
+            "d" => self.reg_d = self.reg_d.wrapping_add(1),
+            "e" => self.reg_e = self.reg_e.wrapping_add(1),
+            "h" => self.reg_h = self.reg_h.wrapping_add(1),
+            "l" => self.reg_l = self.reg_l.wrapping_add(1),
+            _ => panic!("'{}' does not match a register", from)
+        };
         size
     }
 
@@ -886,99 +843,38 @@ impl Cpu {
         size
     }
 
-    fn dec_a(&mut self) -> u16 {
-        let size = 1;
-        self.print_disassembly(format!("DEC A"), size);
-
-        let half = self.reg_a == 0;
-        self.set(Flag::HALFCARRY, half);
-        self.reg_a = self.reg_a.wrapping_sub(1);
-
-        let zero = self.reg_a == 0;
-        self.set(Flag::ZERO, zero);
-        self.set(Flag::SUBTRACT, true);
-        size
+    fn reg(&self, from: &'static str) -> u8 {
+        match from {
+            "a" => self.reg_a,
+            "b" => self.reg_b,
+            "c" => self.reg_c,
+            "d" => self.reg_d,
+            "e" => self.reg_e,
+            "h" => self.reg_h,
+            "l" => self.reg_l,
+            _ => panic!("'{}' does not match a register", from)
+        }
     }
 
-    fn dec_b(&mut self) -> u16 {
+    fn dec(&mut self, from: &'static str) -> u16 {
         let size = 1;
-        self.print_disassembly(format!("DEC B"), size);
+        self.print_disassembly(format!("DEC {}", from), size);
 
-        let half = self.reg_b == 0;
+        let half = self.reg(from) == 0;
         self.set(Flag::HALFCARRY, half);
-        self.reg_b = self.reg_b.wrapping_sub(1);
 
-        let zero = self.reg_b == 0;
-        self.set(Flag::ZERO, zero);
-        self.set(Flag::SUBTRACT, true);
-        size
-    }
+        match from {
+            "a" => self.reg_a = self.reg_a.wrapping_sub(1),
+            "b" => self.reg_b = self.reg_b.wrapping_sub(1),
+            "c" => self.reg_c = self.reg_c.wrapping_sub(1),
+            "d" => self.reg_d = self.reg_d.wrapping_sub(1),
+            "e" => self.reg_e = self.reg_e.wrapping_sub(1),
+            "h" => self.reg_h = self.reg_h.wrapping_sub(1),
+            "l" => self.reg_l = self.reg_l.wrapping_sub(1),
+            _ => panic!("'{}' does not match a register", from)
+        };
 
-    fn dec_c(&mut self) -> u16 {
-        let size = 1;
-        self.print_disassembly(format!("DEC C"), size);
-
-        let half = self.reg_c == 0;
-        self.set(Flag::HALFCARRY, half);
-        self.reg_c = self.reg_c.wrapping_sub(1);
-
-        let zero = self.reg_c == 0;
-        self.set(Flag::ZERO, zero);
-        self.set(Flag::SUBTRACT, true);
-        size
-    }
-
-    fn dec_d(&mut self) -> u16 {
-        let size = 1;
-        self.print_disassembly(format!("DEC D"), size);
-
-        let half = self.reg_d == 0;
-        self.set(Flag::HALFCARRY, half);
-        self.reg_d = self.reg_d.wrapping_sub(1);
-
-        let zero = self.reg_d == 0;
-        self.set(Flag::ZERO, zero);
-        self.set(Flag::SUBTRACT, true);
-        size
-    }
-
-    fn dec_e(&mut self) -> u16 {
-        let size = 1;
-        self.print_disassembly(format!("DEC E"), size);
-
-        let half = self.reg_e == 0;
-        self.set(Flag::HALFCARRY, half);
-        self.reg_e = self.reg_e.wrapping_sub(1);
-
-        let zero = self.reg_e == 0;
-        self.set(Flag::ZERO, zero);
-        self.set(Flag::SUBTRACT, true);
-        size
-    }
-
-    fn dec_h(&mut self) -> u16 {
-        let size = 1;
-        self.print_disassembly(format!("DEC H"), size);
-
-        let half = self.reg_h == 0;
-        self.set(Flag::HALFCARRY, half);
-        self.reg_h = self.reg_h.wrapping_sub(1);
-
-        let zero = self.reg_h == 0;
-        self.set(Flag::ZERO, zero);
-        self.set(Flag::SUBTRACT, true);
-        size
-    }
-
-    fn dec_l(&mut self) -> u16 {
-        let size = 1;
-        self.print_disassembly(format!("DEC L"), size);
-
-        let half = self.reg_l == 0;
-        self.set(Flag::HALFCARRY, half);
-        self.reg_l = self.reg_l.wrapping_sub(1);
-
-        let zero = self.reg_l == 0;
+        let zero = self.reg(from) == 0;
         self.set(Flag::ZERO, zero);
         self.set(Flag::SUBTRACT, true);
         size
