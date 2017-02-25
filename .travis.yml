@@ -9,6 +9,7 @@ sudo: required
 env:
   global:
     - CRATE_NAME=rustboy
+    - DISABLE_TESTS=true
 
 matrix:
   include:
