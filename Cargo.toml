@@ -1,11 +1,11 @@
 [package]
 name = "rustboy"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["Jonathan Dahan <jonathan@jonathan.is>"]
 
 [dependencies]
-minifb = "0.9.1"
-crc = "1.4.0"
+minifb = "0.10.1"
+crc = "1.5.0"
 clippy = {version = "*", optional = true}
 
 [features]

@@ -52,7 +52,7 @@ impl window::Drawable for DebugScreen {
             count = count.wrapping_sub(1);
         }
 
-        self.window.update_with_buffer(&self.buffer);
+        let _ = self.window.update_with_buffer(&self.buffer);
     }
 
     fn run(&mut self) {
