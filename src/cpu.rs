@@ -252,15 +252,7 @@ impl Cpu {
             (_, opcode) => {
                 match opcode {
                     0x00 => self.nop(),
-
-                    // math
-                    0x0C => self.inc("c"),
-                    0x1C => self.inc("e"),
-                    0x2C => self.inc("l"),
-                    0x3C => self.inc("a"),
-                    0x04 => self.inc("b"),
-                    0x14 => self.inc("d"),
-                    0x24 => self.inc("h"),
+                    0x0C => self.inc(opcode),
 
                     0x13 => self.inc_de(),
                     0x23 => self.inc_hl(),
@@ -570,19 +562,20 @@ impl Cpu {
         size
     }
 
-    fn inc(&mut self, from: &'static str) -> u16 {
+    fn inc(&mut self, opcode: u8) -> u16 {
         let size = 1;
-        self.print_disassembly(format!("INC {}", from), size);
-        match from {
-            "a" => self.reg_a = self.reg_a.wrapping_add(1),
-            "b" => self.reg_b = self.reg_b.wrapping_add(1),
-            "c" => self.reg_c = self.reg_c.wrapping_add(1),
-            "d" => self.reg_d = self.reg_d.wrapping_add(1),
-            "e" => self.reg_e = self.reg_e.wrapping_add(1),
-            "h" => self.reg_h = self.reg_h.wrapping_add(1),
-            "l" => self.reg_l = self.reg_l.wrapping_add(1),
-            _ => panic!("'{}' does not match a register", from)
-        };
+        //print_disassembly(format!("INC {}", from), size);
+        println!("!!! INC !!!");
+        match opcode {
+            0x0C => self.reg_c = self.reg_c.wrapping_add(1),
+            0x1C => self.reg_e = self.reg_e.wrapping_add(1),
+            0x2C => self.reg_l = self.reg_l.wrapping_add(1),
+            0x3C => self.reg_a = self.reg_a.wrapping_add(1),
+            0x04 => self.reg_b = self.reg_b.wrapping_add(1),
+            0x14 => self.reg_d = self.reg_d.wrapping_add(1),
+            0x24 => self.reg_h = self.reg_h.wrapping_add(1),
+            _ => ()
+        }
         size
     }
 
