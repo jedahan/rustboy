@@ -55,10 +55,6 @@ impl window::Drawable for DebugScreen {
         let _ = self.window.update_with_buffer(&self.buffer);
     }
 
-    fn run(&mut self) {
-        self.width = self.window.get_size().0 / 4;
-    }
-
     fn pause(&mut self) {
         let frame_duration = Duration::from_millis(16);
         let ms = Duration::from_millis(1);
@@ -103,5 +99,10 @@ impl DebugScreen {
                 .unwrap(),
         }
     }
+
+    fn run(&mut self) {
+        self.width = self.window.get_size().0 / 4;
+    }
+
 }
 

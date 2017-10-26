@@ -1,12 +1,9 @@
-use std::{env, fmt};
+use std::fmt;
 
-use lcd;
-use debug;
 use memory;
 use window::Window;
 use std::sync::{Arc, RwLock};
 use std::fmt::Write;
-use std::time;
 
 #[repr(u8)]
 pub enum Flag {
@@ -31,7 +28,6 @@ pub struct Cpu {
     memory: Arc<RwLock<memory::Memory>>,
     operations: usize,
     running: bool,
-    screen: Box<Window>
 }
 
 impl Cpu {
@@ -75,12 +71,6 @@ impl Cpu {
      * PC 0100h
      **/
     pub fn new(memory: Arc<RwLock<memory::Memory>>) -> Cpu {
-        let memory_ref = memory.clone();
-        let screen: Box<Window> = match env::var("DEBUG") {
-            Ok(_) => Box::new(debug::DebugScreen::new(160, 144, memory_ref)),
-            Err(_) => Box::new(lcd::LcdScreen::new(160, 144, memory_ref))
-        };
-
         Cpu {
             pc: 0,
             sp: 0,
@@ -99,7 +89,6 @@ impl Cpu {
             operations: 0,
 
             memory: memory,
-            screen: screen,
         }
     }
 
@@ -183,49 +172,32 @@ impl Cpu {
         self.memory.read().unwrap()[0xFF0Fu16] & 0b00011111
     }
 
-    pub fn run(&mut self) {
-        println!("Cpu::run");
-        self.running = true;
-        let mut frame_start = time::Instant::now();
-        let target_frame_duration = time::Duration::from_millis(16);
+    pub fn step(&mut self) {
+        // interrupts are serviced before fetching the next instruction
+        self.service_interrupts();
 
-        while self.running {
-            // interrupts are serviced before fetching the next instruction
-            self.service_interrupts();
+        let instruction = self.fetch();
+        let advance = self.execute(instruction);
+        self.pc += advance;
+        self.operations += 1;
 
-            let instruction = self.fetch();
-            let advance = self.execute(instruction);
-            self.pc += advance;
-            self.operations += 1;
-
-            self.screen.update();
-
-            if frame_start.elapsed() >= target_frame_duration {
-                frame_start = time::Instant::now();
-                self.screen.draw();
-            };
-
-            match self.operations {
-                0x0001 => {
-                    self.screen.run();
-                    println!("MAIN SCREEN TURN ON");
-                }
-                _ => ()
+        match self.operations {
+            0x0001 => {
+                println!("MAIN SCREEN TURN ON");
             }
-
-            match self.pc {
-                0x0000 => println!("START CLEAR VRAM"),
-                0x000C => println!("END CLEAR VRAM\n  START AUDIO"),
-                0x001D => println!("END AUDIO\n  START LOGO"),
-                0x00E0 => {
-                    println!("END LOGO\n  START CHECKSUM");
-                    self.halt();
-                }
-                _ => ()
-            }
+            _ => ()
         }
 
-        self.screen.pause();
+        match self.pc {
+            0x0000 => println!("START CLEAR VRAM"),
+            0x000C => println!("END CLEAR VRAM\n  START AUDIO"),
+            0x001D => println!("END AUDIO\n  START LOGO"),
+            0x00E0 => {
+                println!("END LOGO\n  START CHECKSUM");
+                self.halt();
+            }
+            _ => ()
+        }
     }
 
     fn fetch(&mut self) -> (u8, u8) {
@@ -252,7 +224,9 @@ impl Cpu {
             (_, opcode) => {
                 match opcode {
                     0x00 => self.nop(),
-                    0x0C => self.inc(opcode),
+
+                    0x0C | 0x04 => self.inc(opcode),
+                    //_ => self.dec(opcode),
 
                     0x13 => self.inc_de(),
                     0x23 => self.inc_hl(),
@@ -564,18 +538,18 @@ impl Cpu {
 
     fn inc(&mut self, opcode: u8) -> u16 {
         let size = 1;
-        //print_disassembly(format!("INC {}", from), size);
-        println!("!!! INC !!!");
         match opcode {
-            0x0C => self.reg_c = self.reg_c.wrapping_add(1),
-            0x1C => self.reg_e = self.reg_e.wrapping_add(1),
-            0x2C => self.reg_l = self.reg_l.wrapping_add(1),
-            0x3C => self.reg_a = self.reg_a.wrapping_add(1),
-            0x04 => self.reg_b = self.reg_b.wrapping_add(1),
-            0x14 => self.reg_d = self.reg_d.wrapping_add(1),
-            0x24 => self.reg_h = self.reg_h.wrapping_add(1),
-            _ => ()
+            0x04 => {
+                self.reg_b = self.reg_b.wrapping_add(1);
+                self.print_disassembly(format!("INC B"), size);
+            },
+            0x0C => {
+                self.reg_c = self.reg_c.wrapping_add(1);
+                self.print_disassembly(format!("INC C"), size);
+            },
+            _ => panic!("tried to increment an unknown register, opcode {}", opcode)
         }
+        //print_disassembly(format!("INC {}", from), size);
         size
     }
 
@@ -769,24 +743,28 @@ impl Cpu {
         size
     }
 
+    fn ldh_a8_a(&mut self) -> u16 {
+        let size = 2;
+
+        let mut offset = 0;
+
+        if let Ok(mut memory) = self.memory.write() {
+            offset = memory[self.pc + 1];
+
+            let address = 0xFF00 + offset as u16;
+            memory[address] = self.reg_a;
+        }
+
+        self.print_disassembly(format!("LDH (${:0>2X}), A", offset), size);
+
+        size
+    }
+
     fn ldh_a_a8(&mut self) -> u16 {
         let size = 2;
         let memory = self.memory.read().unwrap();
         let offset = memory[self.pc + 1];
         self.print_disassembly(format!("LDH A, (${:0>2X})", offset), size);
-
-        let address = 0xFF00 + offset as u16;
-        let mut memory = self.memory.write().unwrap();
-        memory[address] = self.reg_a;
-
-        size
-    }
-
-    fn ldh_a8_a(&mut self) -> u16 {
-        let size = 2;
-        let memory = self.memory.read().unwrap();
-        let offset = memory[self.pc + 1];
-        self.print_disassembly(format!("LDH (${:0>2X}), A", offset), size);
 
         let address = 0xFF00 + offset as u16;
         let value = memory[address];
@@ -897,9 +875,6 @@ impl fmt::Display for Cpu {
                        {c:0>2X}, d: {d:0>2X}, e: {e:0>2X}, h: {h:0>2X}, l: {l:0>2X} \
                        }}\n\tflags: {{ zero: {zero}, sub: {sub}, half: {half}, carry: {carry} \
                    }}\n}}
-                       \nscreen {{ \
-                       \n\t{screen}\
-                   }}
             ",
                       pc = self.pc,
                       i0 = memory[self.pc + 0],
@@ -919,7 +894,7 @@ impl fmt::Display for Cpu {
                       sub = self.get(Flag::SUBTRACT),
                       half = self.get(Flag::HALFCARRY),
                       carry = self.get(Flag::CARRY),
-                      screen = self.screen));
+                      ));
 
         self.print_stack_and_vram(8);
         Ok(())

@@ -15,7 +15,7 @@ pub struct LcdScreen {
     offset: u16,
     width: usize,
     buffer: Vec<u32>,
-    memory: Arc<RwLock<memory::Memory>>, // TODO: switch to Arc<Mutex<memory::Memory>>
+    memory: Arc<RwLock<memory::Memory>>,
     window: minifb::Window,
 }
 
@@ -99,6 +99,10 @@ impl LcdScreen {
         }
     }
 
+    pub fn step(&mut self) {
+        println!("screen step!");
+        self.memory.write().unwrap()[0xFF40 as u16] |= 0b10000000;
+    }
 }
 
 impl window::Drawable for LcdScreen {
@@ -137,10 +141,6 @@ impl window::Drawable for LcdScreen {
         }
 
         let _ = self.window.update_with_buffer(&self.buffer);
-    }
-
-    fn run(&mut self) {
-        self.memory.write().unwrap()[0xFF40 as u16] |= 0b10000000;
     }
 
     fn pause(&mut self) {
